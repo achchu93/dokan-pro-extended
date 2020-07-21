@@ -1,2 +1,2 @@
 # Dokan Pro Extended
-# ana extension to customize dokan pro plugin
+an extension to customize dokan pro plugin
