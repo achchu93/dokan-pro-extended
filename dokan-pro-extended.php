@@ -8,6 +8,10 @@
   Author URI: https://github.com/achchu93
  */
 
+
+/**
+ * Adds subscription start date field
+ */
 function dpe_subscription_checkout_field( $fields ) {
 	$packages = dokan()->subscription->all();
 
@@ -48,6 +52,9 @@ function dpe_subscription_checkout_field( $fields ) {
 add_filter( 'woocommerce_checkout_fields', 'dpe_subscription_checkout_field' );
 
 
+/**
+ * Store user selected date on checkout process
+ */
 function dpe_save_subscription_start_date( $order_id, $posted_data, $order ) {
 
 	update_user_meta( 
@@ -59,6 +66,9 @@ function dpe_save_subscription_start_date( $order_id, $posted_data, $order ) {
 add_action( 'woocommerce_checkout_order_processed', 'dpe_save_subscription_start_date', 10, 3 );
 
 
+/**
+ * Override subscription start date by user entered date
+ */
 function dpe_extende_subscription_start_date( $vendor_id ) {
 
 	$pack_id   =  get_user_meta( $vendor_id, 'product_package_id', true );
