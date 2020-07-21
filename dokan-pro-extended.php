@@ -134,3 +134,16 @@ function dpe_override_registration_form( $template, $slug, $name ) {
     return $template;
 }
 add_filter( 'dokan_get_template_part', 'dpe_override_registration_form', 10, 3 );
+
+
+/**
+ * Set product default data
+ */
+function dpe_update_dokan_added_product( $product_id, $post_data ) {
+
+    update_post_meta( $product_id, '_manage_stock', 'yes' );
+    update_post_meta( $product_id, '_stock', 1 );
+    update_post_meta( $product_id, '_backorders', 'no' );
+    update_post_meta( $product_id, '_low_stock_amount', 1 );
+}
+add_action( 'dokan_new_product_added', 'dpe_update_dokan_added_product', 10, 2 );
