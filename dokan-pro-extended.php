@@ -90,3 +90,47 @@ function dpe_extende_subscription_start_date( $vendor_id ) {
 
 }
 add_action( 'dokan_vendor_purchased_subscription', 'dpe_extende_subscription_start_date' );
+
+
+/**
+ * Remove shopname field from validation process
+ */
+function dpe_remove_shopname_required_field( $fields ) {
+
+    if( isset( $fields['shopname'] ) ) {
+        unset( $fields['shopname'] );
+    }
+    return $fields;
+}
+add_filter( 'dokan_seller_registration_required_fields', 'dpe_remove_shopname_required_field' );
+
+
+/**
+ * Update seller data with user id and override it for later use
+ */
+function dpe_set_shop_data( $user_id, $data ) {
+
+    wp_update_user( 
+        array(
+            'ID'            => $user_id,
+            'user_nicename' => $user_id
+        )
+    );
+
+    $_POST['shopname'] = $user_id;
+    $_POST['shopurl']  = $user_id;
+
+}
+add_action( 'woocommerce_created_customer', 'dpe_set_shop_data', 5, 2 );
+
+/**
+ * Override registration form
+ */
+function dpe_override_registration_form( $template, $slug, $name ) {
+
+    if( $slug === 'global/seller-registration-form' ) {
+        $template = plugin_dir_path( __FILE__ ) . 'templates/seller-registration-form.php';
+    }
+    return $template;
+}
+add_filter( 'dokan_get_template_part', 'dpe_override_registration_form', 10, 3 );
