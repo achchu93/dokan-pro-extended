@@ -140,6 +140,22 @@ add_filter( 'dokan_get_template_part', 'dpe_override_registration_form', 10, 3 )
 
 
 /**
+ * Override product form
+ */
+function dpe_override_product_form( $template, $slug, $name ) {
+
+    if( $slug === 'products/tmpl-add-product-popup' ) {
+        $child_theme_file = get_stylesheet_directory() . '/dokan/product/tmpl-add-product-popup.php';
+        if( !file_exists( $child_theme_file ) ) {
+            $template = plugin_dir_path( __FILE__ ) . 'templates/tmpl-add-product-popup.php';
+        }
+    }
+    return $template;
+}
+add_filter( 'dokan_get_template_part', 'dpe_override_product_form', 10, 3 );
+
+
+/**
  * Set product default data
  */
 function dpe_update_dokan_added_product( $product_id, $post_data ) {
@@ -190,6 +206,72 @@ function dpe_in_someones_cart_style() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
+
+
+/**
+ * Modify wp media library style
+ */
+function dpe_dashboard_media_library_style() {
+    ob_start();
+    ?>
+    body.dokan-dashboard .media-modal.wp-core-ui {
+        outline: none;
+    }
+    body.dokan-dashboard .media-modal-content {
+        max-width: 600px;
+        height: 450px;
+        left: 0;
+        right: 0;
+        margin: auto;
+        border-radius: 0;
+        box-shadow: none;
+        background: #fff;
+        outline: none;
+    }
+    body.dokan-dashboard .media-frame-title {
+        display: none;
+    }
+    body.dokan-dashboard .media-frame-router {
+        top: 0;
+    }
+    body.dokan-dashboard .media-router {
+        text-align: center;
+    }
+    body.dokan-dashboard .media-menu-item {
+        border: none;
+        float: none;
+    }
+    body.dokan-dashboard .media-menu-item.active {
+        background: #0e8c3a !important;
+        color: #fff !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    body.dokan-dashboard .media-frame-content {
+        border: none;
+        outline: none;
+    }
+    body.dokan-dashboard .uploader-inline .button {
+        color: #fff;
+        border-color: #0e8c3a;
+        background-color: #0e8c3a;
+        border-radius: 0;
+    }
+    body.dokan-dashboard .media-toolbar {
+        border: none;
+    }
+    body.dokan-dashboard .media-button-select,
+    body.dokan-dashboard .media-button-select[disabled] {
+        background-color: #0e8c3a !important;
+        border-color: #0e8c3a !important;
+        border-radius: 0;
+    }
+    <?php
+    $css = ob_get_clean();
+
+    wp_add_inline_style( 'dokan-style', $css );
+}
+add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
 
 
 // function dpe_subscription_calendar_page(){
