@@ -176,3 +176,14 @@ function dpe_in_someones_cart_to_loop() {
 
 }
 add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_loop' );
+
+/**
+ * Inline style for in someones cart label
+ */
+function dpe_in_someones_cart_style() {
+    wp_add_inline_style( 
+        'dokan-style', 
+        '.loop-in-someones-cart{position:absolute;left:0;right:0;margin:1em auto 0;background:rgba(0,0,0,.3);color:#fff;width: 80%;padding: 5px;}' 
+    );
+}
+add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
