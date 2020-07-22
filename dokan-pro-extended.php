@@ -147,3 +147,28 @@ function dpe_update_dokan_added_product( $product_id, $post_data ) {
     update_post_meta( $product_id, '_low_stock_amount', 1 );
 }
 add_action( 'dokan_new_product_added', 'dpe_update_dokan_added_product', 10, 2 );
+
+
+/**
+ * Show `in someones cart` message 
+ * if the items is in another users cart
+ */
+function dpe_in_someones_cart_to_loop() {
+
+    global $wpdb;
+
+    $product_id = get_the_ID();
+
+    if( empty( $product_id ) || !$product_id ) {
+        return;
+    }
+
+    $query = 's:10:"product_id";i:'.$product_id;
+    $carts = $wpdb->get_var("SELECT COUNT(*) from {$wpdb->usermeta} WHERE meta_key = '_woocommerce_persistent_cart_1' and meta_value like '%{$query}%'");
+
+    if( intval( $carts ) > 0 ) {
+        echo '<div class="loop-in-someones-cart">In someones cart</div>';
+    }
+
+}
+add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_loop' );
