@@ -129,7 +129,10 @@ add_action( 'woocommerce_created_customer', 'dpe_set_shop_data', 5, 2 );
 function dpe_override_registration_form( $template, $slug, $name ) {
 
     if( $slug === 'global/seller-registration-form' ) {
-        $template = plugin_dir_path( __FILE__ ) . 'templates/seller-registration-form.php';
+        $child_theme_file = get_stylesheet_directory() . '/dokan/global/seller-registration-form.php';
+        if( !file_exists( $child_theme_file ) ) {
+            $template = plugin_dir_path( __FILE__ ) . 'templates/seller-registration-form.php';
+        }
     }
     return $template;
 }
@@ -187,3 +190,53 @@ function dpe_in_someones_cart_style() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
+
+
+// function dpe_subscription_calendar_page(){
+//     add_submenu_page( 
+//         'dokan',
+//         'Subscription Calendar',
+//         'Subscription Calendar',
+//         'manage_options',
+//         'subscription-calendar',
+//         'dpe_subscription_calendar_output',
+//         999 
+//     );
+// }
+// add_action( 'dokan_admin_menu', 'dpe_subscription_calendar_page' );
+
+
+// function dpe_subscription_calendar_output(){
+//     echo 'hello world';
+// }
+
+
+// /**
+//  * Add subscription date restriction field
+//  */
+// function dpe_admin_settings_subscription_field( $fields ) {
+
+//     $fields['dokan_product_subscription']['subscription_restricted_dates'] = array(
+//         'name'    => 'subscription_restricted_dates',
+//         'label'   => __( 'Restrcit subscription dates', 'dokan' ),
+//         'type'    => 'text',
+//         'desc'    => 'Please select a date and restric vendors per date'
+
+//     );
+//     return $fields;
+// }
+// add_filter( 'dokan_settings_fields', 'dpe_admin_settings_subscription_field', 13 );
+
+
+// function dpe_admin_assets() {
+
+//     $screen = get_current_screen();
+
+//     if( $screen && $screen->id === 'toplevel_page_dokan' ) {
+
+//         wp_enqueue_script( 'dpe-admin-script', plugins_url( 'assets/js/admin.js', __FILE__ ), array( 'jquery', 'jquery-ui-datepicker' ), true );
+//         // wp_enqueue_script( 'jquery-ui-datepicker' );
+//     }
+
+// }
+// add_action( 'admin_enqueue_scripts', 'dpe_admin_assets' );
