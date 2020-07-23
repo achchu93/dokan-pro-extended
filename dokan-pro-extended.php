@@ -465,7 +465,7 @@ function dpe_sub_restricted_days() {
 
     $days = array();
     $diff = intval( $end->format('m') - $start->format('m') );
-    
+
     while( $diff >= 0 ) {
         $key       = "sub_restricted_days_{$year}{$start->format('m')}";
         $days      = array_replace( $days, ( array ) get_option( $key, array() ) );
@@ -485,3 +485,35 @@ function dpe_sub_restricted_days() {
     wp_send_json_success( $events );
 }
 add_action( 'wp_ajax_dpe_sub_restricted_days', 'dpe_sub_restricted_days' );
+
+function dpe_sub_filled_count() {
+    wp_verify_nonce( $_GET['nonce'] );
+
+    global $wpdb;
+
+    $start     = ( new DateTime( $_GET['start'] ) )->format('Y-m-d');
+    $end       = ( new DateTime( $_GET['end'] ) )->format('Y-m-d');
+
+    $query = $wpdb->prepare(
+        "SELECT meta_value as s_date, COUNT(*) as s_count
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'dokan_subscription_start_date' and CAST(meta_value AS DATE) between %s and %s
+        GROUP BY meta_value",
+        array( $start, $end )
+    );
+    $results = $wpdb->get_results( $query, ARRAY_A );
+    $events  = array();
+
+    if( is_array( $results ) ) {
+        foreach( $results as $result ) {
+            $events[] = array(
+                'title'  => "Subscribed {$result['s_count']}",
+                'start'  => date( 'Y-m-d', strtotime( $result['s_date'] ) )
+            );
+        }
+    }
+
+    wp_send_json_success( $events );
+
+}
+add_action( 'wp_ajax_dpe_sub_filled_count', 'dpe_sub_filled_count' );

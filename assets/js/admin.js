@@ -54,17 +54,30 @@
                     }
                 });
             },
-            events: {
-                url: ajaxurl,
-                method: 'GET',
-                extraParams: {
-                    action: 'dpe_sub_restricted_days',
-                    nonce: heartbeatSettings.nonce
+            eventSources: [
+                {
+                    url: ajaxurl,
+                    method: 'GET',
+                    extraParams: {
+                        action: 'dpe_sub_restricted_days',
+                        nonce: heartbeatSettings.nonce
+                    },
+                    failure: function () {
+                        alert('there was an error while fetching dates!');
+                    },
                 },
-                failure: function () {
-                    alert('there was an error while fetching dates!');
-                },
-            },
+                {
+                    url: ajaxurl,
+                    method: 'GET',
+                    extraParams: {
+                        action: 'dpe_sub_filled_count',
+                        nonce: heartbeatSettings.nonce
+                    },
+                    failure: function () {
+                        alert('there was an error while fetching dates!');
+                    },
+                }
+            ],
             eventSourceSuccess: function (content, xhr) {
                 return content.data;
             }
