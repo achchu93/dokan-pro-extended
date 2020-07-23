@@ -341,3 +341,22 @@ function dpe_show_subscription_start_date( $content ) {
     return $content;
 }
 add_filter( 'dokan_sub_shortcode', 'dpe_show_subscription_start_date' );
+
+
+/**
+ * Replace order's product id with vendor custom product ID
+ */
+function dpe_order_line_item_product_id( $item_id, $item, $product ) {
+
+    if( $item->get_type() !== 'line_item' ) {
+        return;
+    }
+
+    $order_id          = $item->get_order_id();
+    $product_id        = $product->get_id();
+    $order             = wc_get_order( $order_id );
+    $custom_product_id = get_user_meta( $order->get_customer_id(), 'vendor_custom_product_id', true );
+
+    printf( '<div class="vendor-product-id">Product ID: %s</span>', "$product_id-$custom_product_id" );
+}
+add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
