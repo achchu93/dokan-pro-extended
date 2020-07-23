@@ -193,9 +193,28 @@ add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
 
 
 /**
- * Modify wp media library style
+ * Vendor dashboard styles and scripts
  */
 function dpe_dashboard_media_library_style() {
+
+    $page_id = dokan_get_option( 'dashboard', 'dokan_pages' );
+
+    if( empty( $page_id ) || !is_page( $page_id ) ) {
+        return;
+    }
+
+    $css = dpe_dokan_dashboard_css();
+    $js  = dpe_dokan_dashboard_js();
+
+    wp_add_inline_style( 'dokan-style', $css );
+    wp_add_inline_script( 'dokan-script', $js );
+}
+add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
+
+/**
+ * Vendor dashboard inline css
+ */
+function dpe_dokan_dashboard_css() {
     ob_start();
     ?>
     body.dokan-dashboard .media-modal.wp-core-ui {
@@ -253,9 +272,25 @@ function dpe_dashboard_media_library_style() {
     <?php
     $css = ob_get_clean();
 
-    wp_add_inline_style( 'dokan-style', $css );
+    return $css;
 }
-add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
+
+/**
+ * Vendor dashboard inline js
+ */
+function dpe_dokan_dashboard_js() {
+    ob_start();
+    ?>
+    jQuery(function($){
+        $('.pack-start-date')
+            .insertAfter( $('.seller_subs_info p').eq(1) )
+            .show();
+    });
+    <?php
+    $js = ob_get_clean();
+    
+    return $js;
+}
 
 
 /**
@@ -289,11 +324,24 @@ add_action( 'dokan_seller_meta_fields', 'dpe_vendor_custom_product_id', 11 );
  * Save custom product id to user meta
  */
 function dpe_save_vendor_custom_product_id( $user_id ) {
-
-    var_dump( 'came' );
-
     if( !empty( $_POST['vendor_custom_product_id'] ) ) {
         update_user_meta( $user_id, 'vendor_custom_product_id', $_POST['vendor_custom_product_id'] );
     }
 }
 add_action( 'dokan_process_seller_meta_fields', 'dpe_save_vendor_custom_product_id' );
+
+
+function dpe_show_subscription_start_date( $content ) {
+    $subscription   = dokan()->vendor->get( get_current_user_id() )->subscription;
+    $starte_date_el = sprintf( 
+       '<p class="pack-start-date" style="display:none;">Your package start date is <span>%s</span></p>', 
+        date_i18n( 
+            get_option( 'date_format' ), 
+            strtotime( $subscription->get_pack_start_date() ) 
+        ) 
+    );
+    $content .= $starte_date_el;
+
+    return $content;
+}
+add_filter( 'dokan_sub_shortcode', 'dpe_show_subscription_start_date' );
