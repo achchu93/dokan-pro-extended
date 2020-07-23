@@ -360,3 +360,116 @@ function dpe_order_line_item_product_id( $item_id, $item, $product ) {
     printf( '<div class="vendor-product-id">Product ID: %s</span>', "$product_id-$custom_product_id" );
 }
 add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
+
+
+function dpe_admin_subscription_calendar() {
+    add_submenu_page( 
+        'dokan', 
+        'Subscription calendar', 
+        'Subscription calendar', 
+        'manage_options', 
+        'subscription-calendar',
+        function(){
+            echo '<div id="subscription_calendar"></div>';
+        }
+    );
+}
+add_action( 'admin_menu', 'dpe_admin_subscription_calendar', 81 );
+
+
+function dpe_admin_assets() {
+
+    wp_enqueue_script( 
+        'full-calendar-js', 
+        'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.js', 
+        array(), 
+        true
+    );
+
+    wp_enqueue_script( 
+        'moment-js', 
+        'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js', 
+        array(), 
+        true
+    );
+
+    wp_enqueue_script(
+        'dpe-admin-js',
+        plugins_url( '/assets/js/admin.js', __FILE__ ),
+        array(),
+        true
+    );
+
+    wp_enqueue_style( 
+        'full-calendar-css', 
+        'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.css'
+    );
+
+    wp_enqueue_style( 
+        'dpe-admin-css', 
+        plugins_url( '/assets/css/admin.css', __FILE__ )
+    );
+}
+add_action( 'admin_enqueue_scripts', 'dpe_admin_assets' );
+
+function dpe_save_restrcited_days(){
+
+    $date_range    = $_POST['restricted_days'];
+    $result        = array();
+    $year          = date( 'Y', strtotime( current( array_keys( $date_range ) ) ) );
+    $months        = array();
+
+    foreach( $date_range as $date => $limit ) {
+        $month      = date( 'm', strtotime( $date ) );
+        if( !array_key_exists( $month, $months ) ) {
+            $months[$month] = array();
+        }
+        $months[$month][] = $date;
+    }
+
+
+    foreach( $months as $month => $dates ) {
+        $option_key = "sub_restricted_days_{$year}{$month}";
+        $days       = get_option( $option_key, array() );
+
+        if( !is_array( $days ) ) {
+            $days = array();
+        }
+
+        foreach( $dates as $date ) {
+            $day        = strtotime( $date );
+            $days[$day] = $date_range[$date];
+        }
+
+        update_option( $option_key, $days );
+    }
+
+    wp_send_json_success( true );
+}
+add_action( 'wp_ajax_dpe_save_restrcited_days', 'dpe_save_restrcited_days' );
+
+
+function dpe_sub_restricted_days() {
+    wp_verify_nonce( $_GET['nonce'] );
+
+    $start = new DateTime( $_GET['start'] );
+    $end   = new DateTime( $_GET['end'] );
+
+    $year      = $start->format( 'Y' );
+    $start_key = "sub_restricted_days_{$year}{$start->format('m')}";
+    $end_key   = "sub_restricted_days_{$year}{$end->format('m')}";
+
+    $days = (array) get_option( $start_key, array() );
+    $days = array_replace( $days, ( array ) get_option( $end_key, array() ) );
+
+    $events = array();
+    foreach( $days as $day => $count ) {
+        $events[] = array(
+            'title'  => "Limited to $count",
+            'start'  => date( 'Y-m-d', $day )
+        );
+    }
+
+    wp_send_json_success( $events );
+}
+add_action( 'wp_ajax_dpe_sub_restricted_days', 'dpe_sub_restricted_days' );
