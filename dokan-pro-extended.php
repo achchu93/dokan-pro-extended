@@ -170,7 +170,7 @@ function dpe_in_someones_cart_to_loop() {
     
 
     if( intval( $carts ) > 0 ) {
-        echo '<div class="loop-in-someones-cart">In someones cart</div>';
+        echo '<div class="loop-in-someones-cart">In Someone\'s Cart</div>';
     }
 
 }
