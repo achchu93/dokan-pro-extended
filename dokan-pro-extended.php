@@ -438,6 +438,13 @@ function dpe_save_restrcited_days(){
 
         foreach( $dates as $date ) {
             $day        = strtotime( $date );
+            $limit      = intval($date_range[$date]);
+
+            if( $limit < 1 ) {
+                unset( $days[$day] );
+                continue;
+            }
+
             $days[$day] = $date_range[$date];
         }
 
@@ -452,15 +459,20 @@ add_action( 'wp_ajax_dpe_save_restrcited_days', 'dpe_save_restrcited_days' );
 function dpe_sub_restricted_days() {
     wp_verify_nonce( $_GET['nonce'] );
 
-    $start = new DateTime( $_GET['start'] );
-    $end   = new DateTime( $_GET['end'] );
-
+    $start     = new DateTime( $_GET['start'] );
+    $end       = new DateTime( $_GET['end'] );
     $year      = $start->format( 'Y' );
-    $start_key = "sub_restricted_days_{$year}{$start->format('m')}";
-    $end_key   = "sub_restricted_days_{$year}{$end->format('m')}";
 
-    $days = (array) get_option( $start_key, array() );
-    $days = array_replace( $days, ( array ) get_option( $end_key, array() ) );
+    $days = array();
+    $diff = intval( $end->format('m') - $start->format('m') );
+    
+    while( $diff >= 0 ) {
+        $key       = "sub_restricted_days_{$year}{$start->format('m')}";
+        $days      = array_replace( $days, ( array ) get_option( $key, array() ) );
+
+        $start->add( date_interval_create_from_date_string( '+1 months' ) );
+        $diff--;
+    }
 
     $events = array();
     foreach( $days as $day => $count ) {

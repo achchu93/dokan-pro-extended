@@ -8,6 +8,7 @@
         var calendar = new FullCalendar.Calendar(el[0], {
             initialView: 'dayGridMonth',
             selectable: true,
+            lazyFetching: true,
             validRange: function ( nowDate ) {
                 nowDate = moment( nowDate );
                 return {
@@ -27,7 +28,7 @@
                 var limit = prompt( message, 1 );
                 limit     = parseInt(limit);
 
-                if( !limit || isNaN(limit) ){
+                if( isNaN(limit) ){
                     return;
                 }
                 
@@ -47,7 +48,9 @@
                 }).then(function(response){
                     if( response.data ) {
                         var source = calendar.getEventSources()[0];
+
                         source.refetch();
+                        calendar.unselect();
                     }
                 });
             },
