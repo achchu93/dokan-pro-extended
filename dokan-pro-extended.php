@@ -13,57 +13,36 @@
  * Adds subscription start date field
  */
 function dpe_subscription_checkout_field( $fields ) {
-	$packages = dokan()->subscription->all();
-
-    if( $packages->have_posts() ) {
-        
-        $in_cart = false;
-
-        foreach( $packages->get_posts() as $package ) {
-            $cart_id    = WC()->cart->generate_cart_id( $package->ID );
-            $in_cart_id = WC()->cart->find_product_in_cart( $cart_id );
-
-            if( $cart_id === $in_cart_id ){
-                $in_cart = true;
-                break;
-            }
-        }
-
-        if( $in_cart ) {
-            $fields['billing']['dokan_subscription_start_date'] = array(
-                'type' => 'date',
-                'required' => true,
-                'name' => 'dokan_subscription_start_date',
-                'id' => 'dokan_subscription_start_date',
-                'validate' => array( 'date' ),
-                'label' => 'Subscription start date',
-                'description' => 'Please select a subscription start date',
-				'priority' => 111,
-				'custom_attributes' => array( 
-					'min' => date( 'Y-m-d' ),
-					'max' => date( 'Y-m-d', strtotime( '+1 year' ) )
-				)
-            );
-        }
-	}
-
-    return $fields;
+    ?>
+    <p class="form-row form-group form-row-wide" style="margin-top:90px;">
+        <label for="dokan_subscription_start_date">Subscription Start Date<span class="required">*</span></label>
+        <input 
+            type="date" 
+            class="input-text form-control" 
+            name="dokan_subscription_start_date" 
+            id="dokan_subscription_start_date" 
+            required="required"
+            min="<?php echo date( 'Y-m-d' ); ?>"
+            max="<?php echo date( 'Y-m-d', strtotime( '+1 year' ) ); ?>"
+        />
+    </p>
+    <?php
 }
-add_filter( 'woocommerce_checkout_fields', 'dpe_subscription_checkout_field' );
+add_action( 'dokan_seller_registration_field_after', 'dpe_subscription_checkout_field', 11 );
 
 
 /**
  * Store user selected date on checkout process
  */
-function dpe_save_subscription_start_date( $order_id, $posted_data, $order ) {
+function dpe_save_subscription_start_date( $user_id, $dokan_settings ) {
 
 	update_user_meta( 
-		$order->get_customer_id(), 
+		$user_id, 
 		'dokan_subscription_start_date', 
-		date( 'Y-m-d H:i:s', strtotime( $posted_data['dokan_subscription_start_date'] ) )
+		date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
 	);
 }
-add_action( 'woocommerce_checkout_order_processed', 'dpe_save_subscription_start_date', 10, 3 );
+add_action( 'dokan_new_seller_created', 'dpe_save_subscription_start_date', 10, 2 );
 
 
 /**
@@ -90,6 +69,23 @@ function dpe_extende_subscription_start_date( $vendor_id ) {
 
 }
 add_action( 'dokan_vendor_purchased_subscription', 'dpe_extende_subscription_start_date' );
+
+
+/**
+ * Validate subscription start date
+ */
+function dpe_validate_subscription_start_date( $error ) {
+    if ( is_checkout() ) {
+        return $error;
+    }
+
+    if( empty( $_POST['dokan_subscription_start_date'] ) ) {
+        return new WP_Error( 'subscription-start-date-error', 'Please enter a valid subscription start date' );
+    }
+
+    return $error;
+}
+add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
 
 
 /**
