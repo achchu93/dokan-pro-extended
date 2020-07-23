@@ -256,3 +256,44 @@ function dpe_dashboard_media_library_style() {
     wp_add_inline_style( 'dokan-style', $css );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
+
+
+/**
+ * Adds custom product id to user fields
+ */
+function dpe_vendor_custom_product_id( $user ) {
+    $custom_product_id = get_user_meta( $user->ID, 'vendor_custom_product_id', true );
+    ?>
+    <tr>
+        <td>
+            <h3>Vendor product ID</h3>
+        </td>
+    </tr>
+    <tr>
+        <th><label for="">Custom product ID</label></th>
+        <td>
+            <input 
+                type="number" 
+                name="vendor_custom_product_id" 
+                id="vendor_custom_product_id" 
+                value="<?php echo $custom_product_id; ?>"
+            />
+        </td>
+    </tr>
+    <?php
+}
+add_action( 'dokan_seller_meta_fields', 'dpe_vendor_custom_product_id', 11 );
+
+
+/**
+ * Save custom product id to user meta
+ */
+function dpe_save_vendor_custom_product_id( $user_id ) {
+
+    var_dump( 'came' );
+
+    if( !empty( $_POST['vendor_custom_product_id'] ) ) {
+        update_user_meta( $user_id, 'vendor_custom_product_id', $_POST['vendor_custom_product_id'] );
+    }
+}
+add_action( 'dokan_process_seller_meta_fields', 'dpe_save_vendor_custom_product_id' );
