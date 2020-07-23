@@ -140,22 +140,6 @@ add_filter( 'dokan_get_template_part', 'dpe_override_registration_form', 10, 3 )
 
 
 /**
- * Override product form
- */
-function dpe_override_product_form( $template, $slug, $name ) {
-
-    if( $slug === 'products/tmpl-add-product-popup' ) {
-        $child_theme_file = get_stylesheet_directory() . '/dokan/product/tmpl-add-product-popup.php';
-        if( !file_exists( $child_theme_file ) ) {
-            $template = plugin_dir_path( __FILE__ ) . 'templates/tmpl-add-product-popup.php';
-        }
-    }
-    return $template;
-}
-add_filter( 'dokan_get_template_part', 'dpe_override_product_form', 10, 3 );
-
-
-/**
  * Set product default data
  */
 function dpe_update_dokan_added_product( $product_id, $post_data ) {
