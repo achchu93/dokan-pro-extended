@@ -156,3 +156,21 @@ function dpe_admin_assets() {
     );
 }
 add_action( 'admin_enqueue_scripts', 'dpe_admin_assets' );
+
+function dpe_registration_scripts() {
+    if( !is_account_page() || is_user_logged_in() ) {
+        return;
+    }
+
+    wp_enqueue_style( 
+        'jquery-ui-datepicker', 
+        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' 
+    );
+    wp_enqueue_script( 
+        'dpe-frontend-js', 
+        plugins_url( 'assets/js/frontend.js', DPE_PLUGIN ), 
+        array( 'jquery', 'jquery-ui-datepicker' ), 
+        true 
+    );
+}
+add_action( 'wp_enqueue_scripts', 'dpe_registration_scripts', 99 );

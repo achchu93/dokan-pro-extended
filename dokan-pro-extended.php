@@ -29,13 +29,11 @@ function dpe_subscription_checkout_field( $fields ) {
     <p class="form-row form-group form-row-wide" style="margin-top:90px;">
         <label for="dokan_subscription_start_date">Subscription Start Date<span class="required">*</span></label>
         <input 
-            type="date" 
+            type="text" 
             class="input-text form-control" 
             name="dokan_subscription_start_date" 
             id="dokan_subscription_start_date" 
             required="required"
-            min="<?php echo date( 'Y-m-d' ); ?>"
-            max="<?php echo date( 'Y-m-d', strtotime( '+1 year' ) ); ?>"
         />
     </p>
     <?php
@@ -93,6 +91,14 @@ function dpe_validate_subscription_start_date( $error ) {
 
     if( empty( $_POST['dokan_subscription_start_date'] ) ) {
         return new WP_Error( 'subscription-start-date-error', 'Please enter a valid subscription start date' );
+    }
+
+    $date = new DateTime( $_POST['dokan_subscription_start_date'] );
+    $now  = new DateTime();
+    $next = (new DateTime())->add( date_interval_create_from_date_string( '+1 years' ) );
+    
+    if( !$date || !in_array( $date->format('Y'), array( $now->format('Y'), $next->format('Y') ) ) ) {
+        return new WP_Error( 'subscription-start-date-error', 'Invalid subscription date' );
     }
 
     return $error;
@@ -370,19 +376,10 @@ add_action( 'wp_ajax_dpe_sub_restricted_days', 'dpe_sub_restricted_days' );
 function dpe_sub_filled_count() {
     wp_verify_nonce( $_GET['nonce'] );
 
-    global $wpdb;
-
     $start     = ( new DateTime( $_GET['start'] ) )->format('Y-m-d');
     $end       = ( new DateTime( $_GET['end'] ) )->format('Y-m-d');
 
-    $query = $wpdb->prepare(
-        "SELECT meta_value as s_date, COUNT(*) as s_count
-        FROM {$wpdb->usermeta}
-        WHERE meta_key = 'product_pack_startdate' and CAST(meta_value AS DATE) between %s and %s
-        GROUP BY meta_value",
-        array( $start, $end )
-    );
-    $results = $wpdb->get_results( $query, ARRAY_A );
+    $results = dpe_get_subscriptions_count( $start, $end );
     $events  = array();
 
     if( is_array( $results ) ) {
@@ -397,3 +394,64 @@ function dpe_sub_filled_count() {
 
 }
 add_action( 'wp_ajax_dpe_sub_filled_count', 'dpe_sub_filled_count' );
+
+
+/**
+ * Ajax handler for frontend restrcited days
+ */
+function dpe_get_restrcited_days_for_month() {
+
+    $year  = $_POST['year'];
+    $month = $_POST['month'];
+    $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
+    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
+
+    $key           = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
+    $days          = get_option( $key, array() );
+    $subscriptions = dpe_get_subscriptions_count( $start->format('Y-m-d'), $end->format('Y-m-d') );
+
+    $results = array();
+
+    if( is_array( $days ) && is_array( $subscriptions ) ) {
+        $filtered = array_filter(
+            $days,
+            function( $count, $date ) use ($subscriptions) {
+                $s_date = array_filter( 
+                    $subscriptions,
+                    function( $subscription ) use ($date) {
+                        return date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
+                    }
+                );
+                return current( $s_date ) && !( intval( $count ) > intval( current( $s_date )['s_count'] ) );
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        $results = array_map(
+            function( $date ) {
+                return date( 'Y-m-d', intval( $date ) );
+            },
+            array_keys( $filtered )
+        );
+    }
+
+    wp_send_json_success( $results );
+}
+add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
+add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
+
+
+
+function dpe_get_subscriptions_count( $start, $end ) {
+
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT meta_value as s_date, COUNT(*) as s_count
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'product_pack_startdate' and CAST(meta_value AS DATE) between %s and %s
+        GROUP BY meta_value",
+        array( $start, $end )
+    );
+    return $wpdb->get_results( $query, ARRAY_A );
+}
