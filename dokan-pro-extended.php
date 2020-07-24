@@ -199,6 +199,16 @@ add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_
  * Adds custom product id to user fields
  */
 function dpe_vendor_custom_product_id( $user ) {
+    global $wpdb;
+
+    $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and user_id != $user->ID and 1=1" );
+    $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
+    
+    $terms = get_terms( array(
+        'taxonomy'   => 'vendor_shelf',
+        'hide_empty' => false,
+        'exclude'    => $exclude
+    ));
     $custom_product_id = get_user_meta( $user->ID, 'vendor_custom_product_id', true );
     ?>
     <tr>
@@ -209,12 +219,13 @@ function dpe_vendor_custom_product_id( $user ) {
     <tr>
         <th><label for="">Custom product ID</label></th>
         <td>
-            <input 
-                type="number" 
-                name="vendor_custom_product_id" 
-                id="vendor_custom_product_id" 
-                value="<?php echo $custom_product_id; ?>"
-            />
+            <select name="vendor_custom_product_id" id="vendor_custom_product_id">
+                <?php foreach( $terms as $term ): ?>
+                <option value="<?php echo $term->term_id; ?>" <?php selected( intval( $custom_product_id ), $term->term_id, true ) ?> >
+                    <?php echo $term->name; ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
         </td>
     </tr>
     <?php
@@ -478,3 +489,75 @@ function dpe_get_subscriptions_count( $start, $end ) {
     );
     return $wpdb->get_results( $query, ARRAY_A );
 }
+
+
+function dpe_vendor_shelf_taxonomy() {
+	register_taxonomy(
+		'vendor_shelf',
+		'user',
+		array(
+            'description' => 'Vendor Shelves which will be assigned per a vendor',
+			'public' => true,
+			'labels' => array(
+				'name'		=> 'Vendor Shelves',
+				'singular_name'	=> 'Vendor Shelf',
+				'menu_name'	=> 'Vendor Shelves',
+				'search_items'	=> 'Search Vendor Shelf',
+				'popular_items' => 'Popular Vendor Shelves',
+				'all_items'	=> 'All Vendor Shelves',
+				'edit_item'	=> 'Edit Vendor Shelf',
+				'update_item'	=> 'Update Vendor Shelf',
+				'add_new_item'	=> 'Add New Vendor Shelf',
+				'new_item_name'	=> 'New Vendor Shelf Name',
+            ),
+            'update_count_callback' => function() {
+				return;
+			}
+		)
+	);
+}
+add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
+
+
+function dpe_admin_vendor_shelves() {
+    $taxonomy = get_taxonomy( 'vendor_shelf' );
+    add_submenu_page( 
+        'dokan', 
+        $taxonomy->labels->menu_name, 
+        $taxonomy->labels->menu_name,
+        'manage_options', 
+        'edit-tags.php?taxonomy=' . $taxonomy->name
+    );
+}
+add_action( 'admin_menu', 'dpe_admin_vendor_shelves', 82 );
+
+
+function dpe_set_vendor_shelf_submenu_active( $submenu_file ) {
+    global $parent_file;
+    // var_dump($parent_file);
+	if( 'edit-tags.php?taxonomy=vendor_shelf' == $submenu_file ) {
+		$parent_file = 'dokan';
+	}
+	return $submenu_file;
+}
+add_filter( 'submenu_file', 'dpe_set_vendor_shelf_submenu_active' );
+
+
+function dpe_update_vendor_shelf ( $user_id, $settings ) {
+    global $wpdb;
+
+    $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and 1=1" );
+    $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
+    
+    $terms = get_terms( array(
+        'taxonomy'   => 'vendor_shelf',
+        'hide_empty' => false,
+        'exclude'    => $exclude
+    ));
+    
+    if( is_array( $terms ) && count( $terms ) ) {
+        $term = current( $terms );
+        update_user_meta( $user_id, 'vendor_custom_product_id', $term->term_id );
+    }
+}
+add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
