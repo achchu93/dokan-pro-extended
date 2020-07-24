@@ -412,6 +412,10 @@ function dpe_admin_assets() {
 }
 add_action( 'admin_enqueue_scripts', 'dpe_admin_assets' );
 
+
+/**
+ * Ajax handler to save restricted days
+ */
 function dpe_save_restrcited_days(){
 
     $date_range    = $_POST['restricted_days'];
@@ -456,6 +460,9 @@ function dpe_save_restrcited_days(){
 add_action( 'wp_ajax_dpe_save_restrcited_days', 'dpe_save_restrcited_days' );
 
 
+/**
+ * Ajax handler for subscription limits
+ */
 function dpe_sub_restricted_days() {
     wp_verify_nonce( $_GET['nonce'] );
 
@@ -486,6 +493,10 @@ function dpe_sub_restricted_days() {
 }
 add_action( 'wp_ajax_dpe_sub_restricted_days', 'dpe_sub_restricted_days' );
 
+
+/**
+ * Ajax handler for subscribed count
+ */
 function dpe_sub_filled_count() {
     wp_verify_nonce( $_GET['nonce'] );
 
@@ -497,7 +508,7 @@ function dpe_sub_filled_count() {
     $query = $wpdb->prepare(
         "SELECT meta_value as s_date, COUNT(*) as s_count
         FROM {$wpdb->usermeta}
-        WHERE meta_key = 'dokan_subscription_start_date' and CAST(meta_value AS DATE) between %s and %s
+        WHERE meta_key = 'product_pack_startdate' and CAST(meta_value AS DATE) between %s and %s
         GROUP BY meta_value",
         array( $start, $end )
     );
@@ -512,7 +523,6 @@ function dpe_sub_filled_count() {
             );
         }
     }
-
     wp_send_json_success( $events );
 
 }
