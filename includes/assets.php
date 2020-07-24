@@ -124,6 +124,12 @@ function dpe_dokan_dashboard_js() {
  */
 function dpe_admin_assets() {
 
+    $screen = get_current_screen();
+
+    if( !$screen || $screen->id !== 'dokan_page_subscription-calendar' ){
+        return;
+    }
+
     wp_enqueue_script( 
         'full-calendar-js', 
         'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.js', 
