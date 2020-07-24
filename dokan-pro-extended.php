@@ -261,14 +261,35 @@ function dpe_order_line_item_product_id( $item_id, $item, $product ) {
         return;
     }
 
-    $order_id          = $item->get_order_id();
-    $product_id        = $product->get_id();
-    $order             = wc_get_order( $order_id );
-    $custom_product_id = get_user_meta( $order->get_customer_id(), 'vendor_custom_product_id', true );
+    $author_id = get_post_field( 'post_author', $product->get_id() );
+    if( !dokan_is_user_seller( $author_id ) ) {
+        return;
+    }
 
-    printf( '<div class="vendor-product-id">Product ID: %s</span>', "$product_id-$custom_product_id" );
+    $custom_product_id = get_user_meta( $author_id, 'vendor_custom_product_id', true );
+    if( empty( $custom_product_id ) ) {
+        return;
+    }
+
+    printf( '<div class="vendor-product-id">Product ID: %s-%s</span>', $product->get_id(), $custom_product_id );
 }
 add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
+
+
+
+function dpe_product_list_table_custom_id( $actions, $post ) {
+
+    if( $post->post_type === 'product' && dokan_is_user_seller( $post->post_author ) ) {
+        $custom_id = get_user_meta( $post->post_author, 'vendor_custom_product_id', true );
+
+        if( !empty( $custom_id ) ) {
+            $actions['id'] = sprintf( 'ID: %s', "{$post->ID}-$custom_id" );
+        }
+    }
+
+    return $actions;
+}
+add_filter( 'post_row_actions', 'dpe_product_list_table_custom_id', 101, 2 );
 
 
 /**
