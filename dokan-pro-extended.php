@@ -15,10 +15,18 @@
 define( 'DPE_PLUGIN', __FILE__ );
 
 
-/**
- * Includes
- */
+// asset includes
 include_once "includes/assets.php";
+
+// ajax includes
+if( defined( 'DOING_AJAX' ) ) {
+    include_once "includes/ajax.php";
+}
+
+// admin includes
+if( is_admin() ) {
+    include_once "includes/admin.php";
+}
 
 
 /**
@@ -196,55 +204,6 @@ add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_
 
 
 /**
- * Adds custom product id to user fields
- */
-function dpe_vendor_custom_product_id( $user ) {
-    global $wpdb;
-
-    $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and user_id != $user->ID and 1=1" );
-    $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
-    
-    $terms = get_terms( array(
-        'taxonomy'   => 'vendor_shelf',
-        'hide_empty' => false,
-        'exclude'    => $exclude
-    ));
-    $custom_product_id = get_user_meta( $user->ID, 'vendor_custom_product_id', true );
-    ?>
-    <tr>
-        <td>
-            <h3>Vendor product ID</h3>
-        </td>
-    </tr>
-    <tr>
-        <th><label for="">Custom product ID</label></th>
-        <td>
-            <select name="vendor_custom_product_id" id="vendor_custom_product_id">
-                <?php foreach( $terms as $term ): ?>
-                <option value="<?php echo $term->term_id; ?>" <?php selected( intval( $custom_product_id ), $term->term_id, true ) ?> >
-                    <?php echo $term->name; ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
-        </td>
-    </tr>
-    <?php
-}
-add_action( 'dokan_seller_meta_fields', 'dpe_vendor_custom_product_id', 11 );
-
-
-/**
- * Save custom product id to user meta
- */
-function dpe_save_vendor_custom_product_id( $user_id ) {
-    if( !empty( $_POST['vendor_custom_product_id'] ) ) {
-        update_user_meta( $user_id, 'vendor_custom_product_id', $_POST['vendor_custom_product_id'] );
-    }
-}
-add_action( 'dokan_process_seller_meta_fields', 'dpe_save_vendor_custom_product_id' );
-
-
-/**
  * Include subscription start date in vendor dashboard
  */
 function dpe_show_subscription_start_date( $content ) {
@@ -264,218 +223,8 @@ add_filter( 'dokan_sub_shortcode', 'dpe_show_subscription_start_date' );
 
 
 /**
- * Replace order's product id with vendor custom product ID
+ * Helper to get subscriptions count
  */
-function dpe_order_line_item_product_id( $item_id, $item, $product ) {
-
-    if( $item->get_type() !== 'line_item' ) {
-        return;
-    }
-
-    $author_id = get_post_field( 'post_author', $product->get_id() );
-    if( !dokan_is_user_seller( $author_id ) ) {
-        return;
-    }
-
-    $custom_product_id = get_user_meta( $author_id, 'vendor_custom_product_id', true );
-    if( empty( $custom_product_id ) ) {
-        return;
-    }
-
-    printf( '<div class="vendor-product-id">Product ID: %s-%s</span>', $product->get_id(), $custom_product_id );
-}
-add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
-
-
-/**
- * Admin product table product id replace with custom product id
- */
-function dpe_product_list_table_custom_id( $actions, $post ) {
-
-    if( $post->post_type === 'product' && dokan_is_user_seller( $post->post_author ) ) {
-        $custom_id = get_user_meta( $post->post_author, 'vendor_custom_product_id', true );
-
-        if( !empty( $custom_id ) ) {
-            $actions['id'] = sprintf( 'ID: %s', "{$post->ID}-$custom_id" );
-        }
-    }
-
-    return $actions;
-}
-add_filter( 'post_row_actions', 'dpe_product_list_table_custom_id', 101, 2 );
-
-
-/**
- * Sub admin menu page for subscription calendar
- */
-function dpe_admin_subscription_calendar() {
-    add_submenu_page( 
-        'dokan', 
-        'Subscription calendar', 
-        'Subscription calendar', 
-        'manage_options', 
-        'subscription-calendar',
-        function(){
-            echo '<div id="subscription_calendar"></div>';
-        }
-    );
-}
-add_action( 'admin_menu', 'dpe_admin_subscription_calendar', 81 );
-
-
-/**
- * Ajax handler to save restricted days
- */
-function dpe_save_restrcited_days(){
-
-    $date_range    = $_POST['restricted_days'];
-    $result        = array();
-    $year          = date( 'Y', strtotime( current( array_keys( $date_range ) ) ) );
-    $months        = array();
-
-    foreach( $date_range as $date => $limit ) {
-        $month      = date( 'm', strtotime( $date ) );
-        if( !array_key_exists( $month, $months ) ) {
-            $months[$month] = array();
-        }
-        $months[$month][] = $date;
-    }
-
-
-    foreach( $months as $month => $dates ) {
-        $option_key = "sub_restricted_days_{$year}{$month}";
-        $days       = get_option( $option_key, array() );
-
-        if( !is_array( $days ) ) {
-            $days = array();
-        }
-
-        foreach( $dates as $date ) {
-            $day        = strtotime( $date );
-            $limit      = intval($date_range[$date]);
-
-            if( $limit < 1 ) {
-                unset( $days[$day] );
-                continue;
-            }
-
-            $days[$day] = $date_range[$date];
-        }
-
-        update_option( $option_key, $days );
-    }
-
-    wp_send_json_success( true );
-}
-add_action( 'wp_ajax_dpe_save_restrcited_days', 'dpe_save_restrcited_days' );
-
-
-/**
- * Ajax handler for subscription limits
- */
-function dpe_sub_restricted_days() {
-    wp_verify_nonce( $_GET['nonce'] );
-
-    $start     = new DateTime( $_GET['start'] );
-    $end       = new DateTime( $_GET['end'] );
-    $year      = $start->format( 'Y' );
-
-    $days = array();
-    $diff = intval( $end->format('m') - $start->format('m') );
-
-    while( $diff >= 0 ) {
-        $key       = "sub_restricted_days_{$year}{$start->format('m')}";
-        $days      = array_replace( $days, ( array ) get_option( $key, array() ) );
-
-        $start->add( date_interval_create_from_date_string( '+1 months' ) );
-        $diff--;
-    }
-
-    $events = array();
-    foreach( $days as $day => $count ) {
-        $events[] = array(
-            'title'  => "Limited to $count",
-            'start'  => date( 'Y-m-d', $day )
-        );
-    }
-
-    wp_send_json_success( $events );
-}
-add_action( 'wp_ajax_dpe_sub_restricted_days', 'dpe_sub_restricted_days' );
-
-
-/**
- * Ajax handler for subscribed count
- */
-function dpe_sub_filled_count() {
-    wp_verify_nonce( $_GET['nonce'] );
-
-    $start     = ( new DateTime( $_GET['start'] ) )->format('Y-m-d');
-    $end       = ( new DateTime( $_GET['end'] ) )->format('Y-m-d');
-
-    $results = dpe_get_subscriptions_count( $start, $end );
-    $events  = array();
-
-    if( is_array( $results ) ) {
-        foreach( $results as $result ) {
-            $events[] = array(
-                'title'  => "Subscribed {$result['s_count']}",
-                'start'  => date( 'Y-m-d', strtotime( $result['s_date'] ) )
-            );
-        }
-    }
-    wp_send_json_success( $events );
-
-}
-add_action( 'wp_ajax_dpe_sub_filled_count', 'dpe_sub_filled_count' );
-
-
-/**
- * Ajax handler for frontend restrcited days
- */
-function dpe_get_restrcited_days_for_month() {
-
-    $year  = $_POST['year'];
-    $month = $_POST['month'];
-    $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
-    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
-
-    $key           = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
-    $days          = get_option( $key, array() );
-    $subscriptions = dpe_get_subscriptions_count( $start->format('Y-m-d'), $end->format('Y-m-d') );
-
-    $results = array();
-
-    if( is_array( $days ) && is_array( $subscriptions ) ) {
-        $filtered = array_filter(
-            $days,
-            function( $count, $date ) use ($subscriptions) {
-                $s_date = array_filter( 
-                    $subscriptions,
-                    function( $subscription ) use ($date) {
-                        return date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
-                    }
-                );
-                return current( $s_date ) && !( intval( $count ) > intval( current( $s_date )['s_count'] ) );
-            },
-            ARRAY_FILTER_USE_BOTH
-        );
-
-        $results = array_map(
-            function( $date ) {
-                return date( 'Y-m-d', intval( $date ) );
-            },
-            array_keys( $filtered )
-        );
-    }
-
-    wp_send_json_success( $results );
-}
-add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
-add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
-
-
-
 function dpe_get_subscriptions_count( $start, $end ) {
 
     global $wpdb;
@@ -491,6 +240,9 @@ function dpe_get_subscriptions_count( $start, $end ) {
 }
 
 
+/**
+ * Register vendoe shelf taxonomy
+ */
 function dpe_vendor_shelf_taxonomy() {
 	register_taxonomy(
 		'vendor_shelf',
@@ -519,30 +271,9 @@ function dpe_vendor_shelf_taxonomy() {
 add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
 
 
-function dpe_admin_vendor_shelves() {
-    $taxonomy = get_taxonomy( 'vendor_shelf' );
-    add_submenu_page( 
-        'dokan', 
-        $taxonomy->labels->menu_name, 
-        $taxonomy->labels->menu_name,
-        'manage_options', 
-        'edit-tags.php?taxonomy=' . $taxonomy->name
-    );
-}
-add_action( 'admin_menu', 'dpe_admin_vendor_shelves', 82 );
-
-
-function dpe_set_vendor_shelf_submenu_active( $submenu_file ) {
-    global $parent_file;
-    // var_dump($parent_file);
-	if( 'edit-tags.php?taxonomy=vendor_shelf' == $submenu_file ) {
-		$parent_file = 'dokan';
-	}
-	return $submenu_file;
-}
-add_filter( 'submenu_file', 'dpe_set_vendor_shelf_submenu_active' );
-
-
+/**
+ * Assign available vendor shelf for vendor
+ */
 function dpe_update_vendor_shelf ( $user_id, $settings ) {
     global $wpdb;
 
