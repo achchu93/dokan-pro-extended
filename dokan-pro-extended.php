@@ -9,6 +9,18 @@
  */
 
 
+
+/**
+ * Dependancies check
+ */
+$deps           = array( 'woocommerce/woocommerce.php', 'dokan-lite/dokan.php' );
+$active_plugins = get_option( 'active_plugins', array() );
+
+// bail if dependancies not found
+if( count( array_diff( $deps, $active_plugins ) ) > 0 ) {
+    return;
+}
+
 /**
  * Plugin file constant
  */
