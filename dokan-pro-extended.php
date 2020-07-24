@@ -276,7 +276,9 @@ function dpe_order_line_item_product_id( $item_id, $item, $product ) {
 add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
 
 
-
+/**
+ * Admin product table product id replace with custom product id
+ */
 function dpe_product_list_table_custom_id( $actions, $post ) {
 
     if( $post->post_type === 'product' && dokan_is_user_seller( $post->post_author ) ) {
