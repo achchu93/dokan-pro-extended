@@ -111,6 +111,56 @@ function dpe_dokan_dashboard_js() {
         $('.pack-start-date')
             .insertAfter( $('.seller_subs_info p').eq(1) )
             .show();
+
+
+        $('body').on( 'change', '.product_cat', function( e ) {
+
+            $(this).parent().nextAll('.cat-group').each( function(){
+                var productCatSelect = $(this).find('.product_cat');
+                if( productCatSelect.length ) {
+                    $(this).remove();
+                }
+            });
+
+            renderChildCategories( $(this) );
+
+            function renderChildCategories( parentCatEl ) {
+                var parentCat = parentCatEl.val();
+                if( $.isArray( parentCat ) ) {
+                    return;
+                }
+                if( parseInt( parentCat ) < 1 ) {
+                    return;
+                }
+                if( $( '#dokan-add-new-product-form .product_cat' ).length > 3 ) {
+                    return;
+                }
+
+                var wrapperEl = parentCatEl.parents('.product-full-container');
+                wrapperEl.block({message:null});
+
+                $.ajax({
+                    url: dokan.ajaxurl,
+                    data: {
+                        action: 'dpe_get_child_category_el',
+                        category: parentCat
+                    }
+                }).then( function( response ) {
+                    if( response.success ) {
+                        var catWrapper = $(response.data);
+                        
+                        if( catWrapper.find('.product_cat option').length < 2 ) {
+                            return;
+                        }
+
+                        catWrapper.insertAfter(parentCatEl.parent());
+                        catWrapper.find('.product_cat').select2();
+                    }
+                }).always( function() {
+                    wrapperEl.unblock();
+                });
+            }
+        } );
     });
     <?php
     $js = ob_get_clean();

@@ -304,3 +304,20 @@ function dpe_update_vendor_shelf ( $user_id, $settings ) {
     }
 }
 add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
+
+
+/**
+ * Override vendor add new product template
+ */
+function dpe_vendor_add_product_popup( $template, $slug, $name ) {
+
+    if( $slug === 'products/tmpl-add-product-popup' ) {
+        $child_theme_file = get_stylesheet_directory() . '/dokan/products/tmpl-add-product-popup';
+        if( !file_exists( $child_theme_file ) ) {
+            $template = plugin_dir_path( DPE_PLUGIN ) . 'templates/tmpl-add-product-popup.php';
+        }
+    }
+
+    return $template;
+}
+add_filter( 'dokan_get_template_part', 'dpe_vendor_add_product_popup', 10, 3 );

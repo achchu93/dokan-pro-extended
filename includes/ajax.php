@@ -154,3 +154,66 @@ function dpe_get_restrcited_days_for_month() {
 }
 add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
 add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
+
+
+/**
+ * Ajax handler for frontend vendor dashboard
+ */
+function dpe_get_child_category_el() {
+
+    $parent_cat = $_GET['category'];
+
+    ob_start();
+    if ( dokan_get_option( 'product_category_style', 'dokan_selling', 'single' ) == 'single' ): ?>
+        <div class="dokan-form-group cat-group">
+            <?php
+            $product_cat = -1;
+            $category_args =  array(
+                'show_option_none' => __( '- Select a category -', 'dokan-lite' ),
+                'hierarchical'     => 0,
+                'hide_empty'       => 0,
+                'name'             => 'product_cat',
+                'id'               => 'product_cat_'.$parent_cat,
+                'taxonomy'         => 'product_cat',
+                'title_li'         => '',
+                'class'            => 'product_cat dokan-form-control dokan-select2',
+                'exclude'          => '',
+                'selected'         => $product_cat,
+                'parent'           => $parent_cat
+            );
+
+            wp_dropdown_categories( apply_filters( 'dokan_product_cat_dropdown_args', $category_args ) );
+        ?>
+        </div>
+    <?php elseif ( dokan_get_option( 'product_category_style', 'dokan_selling', 'single' ) == 'multiple' ): ?>
+        <div class="dokan-form-group cat-group">
+            <?php
+            $term = array();
+            include_once DOKAN_LIB_DIR.'/class.taxonomy-walker.php';
+            $drop_down_category = wp_dropdown_categories(  apply_filters( 'dokan_product_cat_dropdown_args', array(
+                'show_option_none' => __( '', 'dokan-lite' ),
+                'hierarchical'     => 0,
+                'hide_empty'       => 0,
+                'name'             => 'product_cat[]',
+                'id'               => 'product_cat_'.$parent_cat,
+                'taxonomy'         => 'product_cat',
+                'title_li'         => '',
+                'class'            => 'product_cat dokan-form-control dokan-select2',
+                'exclude'          => '',
+                'selected'         => $term,
+                'echo'             => 0,
+                'walker'           => new TaxonomyDropdown(),
+                'parent'           => $parent_cat
+            ) ) );
+
+            echo str_replace( '<select', '<select data-placeholder="'.__( 'Select product category', 'dokan-lite' ).'" multiple="multiple" ', $drop_down_category ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+            ?>
+        </div>
+    <?php endif;
+
+    $response = ob_get_clean();
+    
+    wp_send_json_success( $response );
+}
+add_action( 'wp_ajax_dpe_get_child_category_el', 'dpe_get_child_category_el' );
+add_action( 'wp_ajax_no_priv_dpe_get_child_category_el', 'dpe_get_child_category_el' );
