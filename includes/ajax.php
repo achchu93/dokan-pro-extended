@@ -114,46 +114,15 @@ add_action( 'wp_ajax_dpe_sub_filled_count', 'dpe_sub_filled_count' );
 /**
  * Ajax handler for frontend restrcited days
  */
-function dpe_get_restrcited_days_for_month() {
-
+function dpe_restricted_days_for_month() {
+    
     $year  = $_POST['year'];
     $month = $_POST['month'];
-    $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
-    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
 
-    $key           = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
-    $days          = get_option( $key, array() );
-    $subscriptions = dpe_get_subscriptions_count( $start->format('Y-m-d'), $end->format('Y-m-d') );
-
-    $results = array();
-
-    if( is_array( $days ) && is_array( $subscriptions ) ) {
-        $filtered = array_filter(
-            $days,
-            function( $count, $date ) use ($subscriptions) {
-                $s_date = array_filter( 
-                    $subscriptions,
-                    function( $subscription ) use ($date) {
-                        return date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
-                    }
-                );
-                return current( $s_date ) && !( intval( $count ) > intval( current( $s_date )['s_count'] ) );
-            },
-            ARRAY_FILTER_USE_BOTH
-        );
-
-        $results = array_map(
-            function( $date ) {
-                return date( 'Y-m-d', intval( $date ) );
-            },
-            array_keys( $filtered )
-        );
-    }
-
-    wp_send_json_success( $results );
+    wp_send_json_success( dpe_get_restrcited_days_for_month( $year, $month ) );
 }
-add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
-add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_get_restrcited_days_for_month' );
+add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_restricted_days_for_month' );
+add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_restricted_days_for_month' );
 
 
 /**

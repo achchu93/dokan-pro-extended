@@ -121,6 +121,12 @@ function dpe_validate_subscription_start_date( $error ) {
         return new WP_Error( 'subscription-start-date-error', 'Invalid subscription date' );
     }
 
+    $restricted_days = dpe_get_restrcited_days_for_month( $date->format('Y'), $date->format('m') );
+    
+    if( count( $restricted_days ) && in_array( $date->format('Y-m-d'), $restricted_days ) ) {
+        return new WP_Error( 'subscription-start-date-error', 'Restricted subscription date' );
+    }
+
     return $error;
 }
 add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
@@ -220,14 +226,16 @@ add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_
  */
 function dpe_show_subscription_start_date( $content ) {
     $subscription   = dokan()->vendor->get( get_current_user_id() )->subscription;
-    $starte_date_el = sprintf( 
-       '<p class="pack-start-date" style="display:none;">Your package start date is <span>%s</span></p>', 
-        date_i18n( 
-            get_option( 'date_format' ), 
-            strtotime( $subscription->get_pack_start_date() ) 
-        ) 
-    );
-    $content .= $starte_date_el;
+    if( $subscription ) {
+        $starte_date_el = sprintf( 
+            '<p class="pack-start-date" style="display:none;">Your package start date is <span>%s</span></p>', 
+            date_i18n( 
+                get_option( 'date_format' ), 
+                strtotime( $subscription->get_pack_start_date() ) 
+            ) 
+        );
+        $content .= $starte_date_el;
+    }
 
     return $content;
 }
@@ -321,3 +329,44 @@ function dpe_vendor_add_product_popup( $template, $slug, $name ) {
     return $template;
 }
 add_filter( 'dokan_get_template_part', 'dpe_vendor_add_product_popup', 10, 3 );
+
+
+/**
+ * Helper to get restricted dates in a month
+ */
+function dpe_get_restrcited_days_for_month( $year, $month ) {
+
+    $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
+    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
+
+    $key           = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
+    $days          = get_option( $key, array() );
+    $subscriptions = dpe_get_subscriptions_count( $start->format('Y-m-d'), $end->format('Y-m-d') );
+
+    $results = array();
+
+    if( is_array( $days ) && is_array( $subscriptions ) ) {
+        $filtered = array_filter(
+            $days,
+            function( $count, $date ) use ($subscriptions) {
+                $s_date = array_filter( 
+                    $subscriptions,
+                    function( $subscription ) use ($date) {
+                        return date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
+                    }
+                );
+                return current( $s_date ) && !( intval( $count ) > intval( current( $s_date )['s_count'] ) );
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        $results = array_map(
+            function( $date ) {
+                return date( 'Y-m-d', intval( $date ) );
+            },
+            array_keys( $filtered )
+        );
+    }
+
+    return $results;
+}
