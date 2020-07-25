@@ -176,6 +176,13 @@ function dpe_admin_assets() {
 
     $screen = get_current_screen();
 
+    if( $screen && $screen->id === 'user-edit' ) {
+        wp_enqueue_script( 'jquery-ui-datepicker', null, array(), true );
+
+        wp_localize_script( 'jquery-ui-datepicker', 'dpe_datepicker', array( 'format' => get_option( 'date_format' ) ) );
+        return;
+    }
+
     if( !$screen || $screen->id !== 'dokan_page_subscription-calendar' ){
         return;
     }

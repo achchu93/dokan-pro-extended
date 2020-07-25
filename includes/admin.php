@@ -140,3 +140,137 @@ function dpe_set_vendor_shelf_submenu_active( $submenu_file ) {
 	return $submenu_file;
 }
 add_filter( 'submenu_file', 'dpe_set_vendor_shelf_submenu_active' );
+
+
+/**
+ * Removes dokan subscription data 
+ * from admin user profile page to override
+ */
+add_action( 'dokan_seller_meta_fields', function(){
+    remove_action( 'dokan_seller_meta_fields', array( 'DPS_Admin', 'add_subscription_packs_dropdown' ), 10 );
+}, 1 );
+
+
+/**
+ * Add subscription pack fields
+ */
+function dpe_add_subscription_packs_dropdown ( $user ) {
+    $users_assigned_pack       = get_user_meta( $user->ID, 'product_package_id', true );
+    $vendor_allowed_categories = get_user_meta( $user->ID, 'vendor_allowed_categories', true );
+
+    $args = array(
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'product_type',
+                'field'    => 'slug',
+                'terms'    => 'product_pack',
+            ),
+        ),
+        'meta_query' => array(
+            array(
+                'key' => '_enable_recurring_payment',
+                'value' => 'no',
+            )
+        )
+    );
+    $sub_packs = get_posts( apply_filters( 'dps_get_non_recurring_pack_arg', $args ) );
+    ?>
+    <tr>
+        <td>
+            <h3><?php _e( 'Dokan Subscription', 'dokan' ); ?> </h3>
+        </td>
+    </tr>
+
+    <?php if ( $users_assigned_pack ) : ?>
+        <tr>
+            <td><?php _e( 'Currently Activated Pack', 'dokan' ); ?></td>
+            <td> <?php echo get_the_title( $users_assigned_pack ); ?> </td>
+        </tr>
+        <tr>
+            <td><?php _e( 'Start Date :' ) ;?></td>
+            <td>
+                <input 
+                    type="text" 
+                    name="product_pack_startdate"
+                    id="product_pack_startdate" 
+                    value="<?php echo date( get_option( 'date_format' ), strtotime( get_user_meta( $user->ID, 'product_pack_startdate', true ) ) ); ?>"
+                />
+            </td>
+        </tr>
+        <tr>
+            <td><?php _e( 'End Date :' ) ;?></td>
+            <td>
+                <?php if ( 'unlimited' === get_user_meta( $user->ID, 'product_pack_enddate', true ) ) {
+                    printf( __( 'Lifetime package.', 'dokan' ) );
+                } else {
+                    echo date( get_option( 'date_format' ), strtotime( get_user_meta( $user->ID, 'product_pack_enddate', true ) ) );
+                } ?>
+            </td>
+        </tr>
+    <?php endif; ?>
+
+    <tr>
+            <?php if ( $users_assigned_pack  && get_user_meta( $user->ID, '_customer_recurring_subscription', true ) == 'active' ) : ?>
+            <td colspan="2"><?php  _e( '<i>This user already has recurring pack assigned. Are you sure to assign a new normal pack to the user? If you do so, the existing recurring plan will be replaced with the new one<i>', 'dokan' ); ?></td>
+        <?php endif; ?>
+    </tr>
+
+    <tr>
+        <td><?php _e( 'Allowed categories', 'dokan' ); ?></td>
+        <td>
+            <?php
+                $selected_cat = ! empty( $vendor_allowed_categories ) ? $vendor_allowed_categories : get_post_meta( $users_assigned_pack, '_vendor_allowed_categories', true );
+                echo '<select multiple="multiple" data-placeholder=" '. __( 'Select categories&hellip;', 'dokan' ) .'" class="wc-enhanced-select" id="vendor_allowed_categories" name="vendor_allowed_categories[]" style="width: 350px;">';
+                $r = array();
+                $r['pad_counts']    = 1;
+                $r['hierarchical']  = 1;
+                $r['hide_empty']    = 0;
+                $r['value']         = 'id';
+                $r['orderby']       = 'name';
+                $r['selected']      = ! empty( $selected_cat ) ? array_map( 'absint', $selected_cat ) : '';
+
+                $categories = get_terms( 'product_cat', $r );
+
+                include_once( WC()->plugin_path() . '/includes/walkers/class-product-cat-dropdown-walker.php' );
+
+                echo wc_walk_category_dropdown_tree( $categories, 0, $r );
+                echo '</select>';
+            ?>
+            <p class="description"><?php _e( 'You can override allowed categories for this user. If empty then the predefined category for this pack will be selected', 'dokan' ); ?></p>
+        </td>
+    </tr>
+
+    <tr class="dps_assign_pack">
+        <td><?php _e( 'Assign Subscription Pack', 'wedevs' ); ?></td>
+        <td>
+            <select name="_dokan_user_assigned_sub_pack">
+                <option value="" <?php selected( $users_assigned_pack, '' ); ?>><?php _e( '-- Select a pack --', 'dokan' ); ?></option>
+                <?php foreach ( $sub_packs as $pack ) : ?>
+                    <option value="<?php echo $pack->ID;?>" <?php selected( $users_assigned_pack, $pack->ID ); ?>><?php echo $pack->post_title; ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e( 'You can only assign non-recurring packs', 'dokan' ); ?></p>
+        </td>
+    </tr>
+    <script type="text/javascript">
+        jQuery(document).ready( function($) {
+            $('#product_pack_startdate').datepicker();
+        });
+    </script>
+<?php
+}
+add_action( 'dokan_seller_meta_fields', 'dpe_add_subscription_packs_dropdown' );
+
+
+/**
+ * Update vendor subscription pack start date
+ */
+function dpe_save_pack_start_date( $user_id ) {
+    if( !empty( $_POST['product_pack_startdate'] ) ) {
+        update_user_meta( $user_id, 'product_pack_startdate', date( 'Y-m-d H:i:s', strtotime( $_POST['product_pack_startdate'] ) ) );
+    }
+}
+add_action( 'dokan_process_seller_meta_fields', 'dpe_save_pack_start_date', 15 );
