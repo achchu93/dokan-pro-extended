@@ -29,6 +29,7 @@ function dpe_vendor_custom_product_id( $user ) {
         <th><label for="">Custom product ID</label></th>
         <td>
             <select name="vendor_custom_product_id" id="vendor_custom_product_id">
+                <option value="">Select ID</option>
                 <?php foreach( $terms as $term ): ?>
                 <option value="<?php echo $term->term_id; ?>" <?php selected( intval( $custom_product_id ), $term->term_id, true ) ?> >
                     <?php echo $term->name; ?>
@@ -46,9 +47,8 @@ add_action( 'dokan_seller_meta_fields', 'dpe_vendor_custom_product_id', 11 );
  * Save custom product id to user meta
  */
 function dpe_save_vendor_custom_product_id( $user_id ) {
-    if( !empty( $_POST['vendor_custom_product_id'] ) ) {
-        update_user_meta( $user_id, 'vendor_custom_product_id', $_POST['vendor_custom_product_id'] );
-    }
+    $product_id = !empty( $_POST['vendor_custom_product_id'] ) ? $_POST['vendor_custom_product_id'] : "";
+    update_user_meta( $user_id, 'vendor_custom_product_id', $product_id );
 }
 add_action( 'dokan_process_seller_meta_fields', 'dpe_save_vendor_custom_product_id' );
 
