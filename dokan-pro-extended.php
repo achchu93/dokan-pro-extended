@@ -28,16 +28,16 @@ define( 'DPE_PLUGIN', __FILE__ );
 
 
 // asset includes
-include_once "includes/assets.php";
+include_once dirname( __FILE__ ) . "/includes/assets.php";
 
 // ajax includes
 if( defined( 'DOING_AJAX' ) ) {
-    include_once "includes/ajax.php";
+    include_once dirname( __FILE__ ) . "/includes/ajax.php";
 }
 
 // admin includes
 if( is_admin() ) {
-    include_once "includes/admin.php";
+    include_once dirname( __FILE__ ) . "/includes/admin.php";
 }
 
 
