@@ -35,7 +35,7 @@ function dpe_save_restrcited_days(){
             $day        = strtotime( $date );
             $limit      = intval($date_range[$date]);
 
-            if( $limit < 1 ) {
+            if( $limit < 0 ) {
                 unset( $days[$day] );
                 continue;
             }

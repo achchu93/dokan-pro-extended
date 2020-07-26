@@ -355,11 +355,11 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
             function( $count, $date ) use ($subscriptions) {
                 $s_date = array_filter( 
                     $subscriptions,
-                    function( $subscription ) use ($date) {
-                        return date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
+                    function( $subscription ) use ($count, $date) {
+                        return $count < 1 || date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
                     }
                 );
-                return current( $s_date ) && !( intval( $count ) > intval( current( $s_date )['s_count'] ) );
+                return reset( $s_date ) && intval( $count ) <= intval( $s_date[0]['s_count'] );
             },
             ARRAY_FILTER_USE_BOTH
         );
