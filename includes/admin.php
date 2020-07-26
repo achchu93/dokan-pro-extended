@@ -317,5 +317,9 @@ function dpe_save_pack_start_date( $user_id ) {
     if( !empty( $_POST['product_pack_startdate'] ) ) {
         update_user_meta( $user_id, 'product_pack_startdate', date( 'Y-m-d H:i:s', strtotime( $_POST['product_pack_startdate'] ) ) );
     }
+
+    if( !empty( $_POST['product_pack_enddate'] ) ) {
+        update_user_meta( $user_id, 'product_pack_enddate', date( 'Y-m-d H:i:s', strtotime( $_POST['product_pack_enddate'] ) ) );
+    }
 }
 add_action( 'dokan_process_seller_meta_fields', 'dpe_save_pack_start_date', 15 );
