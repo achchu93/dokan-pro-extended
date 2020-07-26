@@ -197,6 +197,7 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
                     name="product_pack_startdate"
                     id="product_pack_startdate" 
                     value="<?php echo date( get_option( 'date_format' ), strtotime( get_user_meta( $user->ID, 'product_pack_startdate', true ) ) ); ?>"
+                    readonly
                 />
             </td>
         </tr>
@@ -206,8 +207,15 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
                 <?php if ( 'unlimited' === get_user_meta( $user->ID, 'product_pack_enddate', true ) ) {
                     printf( __( 'Lifetime package.', 'dokan' ) );
                 } else {
-                    echo date( get_option( 'date_format' ), strtotime( get_user_meta( $user->ID, 'product_pack_enddate', true ) ) );
-                } ?>
+                    ?>
+                    <input 
+                        type="text"
+                        name="product_pack_enddate"
+                        id="product_pack_enddate"
+                        value="<?php echo date( get_option( 'date_format' ), strtotime( get_user_meta( $user->ID, 'product_pack_enddate', true ) ) ); ?>"
+                        readonly
+                    />
+                <?php } ?>
             </td>
         </tr>
     <?php endif; ?>
@@ -257,7 +265,44 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
     </tr>
     <script type="text/javascript">
         jQuery(document).ready( function($) {
-            $('#product_pack_startdate').datepicker();
+            $('#product_pack_startdate, #product_pack_enddate').each( function() {
+                $(this).datepicker({
+                    minDate: $(this).is('#product_pack_enddate') ?  getMinEndDate() : new Date(),
+                    maxDate: $(this).is('#product_pack_startdate') ? getMaxStartDate(): null,
+                    onSelect: function( date, instance ) {
+                        if( instance.id === 'product_pack_startdate' ) {
+                            $('#product_pack_enddate').datepicker( 'option', 'minDate', getMinEndDate() );
+                        }else{
+                            $('#product_pack_startdate').datepicker( 'option', 'maxDate', getMaxStartDate() );
+                        }
+                    },
+                    beforeShow: function() {
+                        if( $(this).is('#product_pack_startdate') ) {
+                            $('#product_pack_enddate').datepicker( 'option', 'minDate', getMinEndDate() );
+                        }else{
+                            $('#product_pack_startdate').datepicker( 'option', 'maxDate', getMaxStartDate() );
+                        }
+                    }
+                });
+
+                $(this).datepicker('refresh');
+            });
+
+            function getMinEndDate(){
+                var startDateEl = $('#product_pack_startdate');
+                var startDate   = startDateEl.datepicker('getDate');
+
+                startDate.setDate( startDate.getDate() + 1 );
+
+                return startDate;
+            }
+
+            function getMaxStartDate(){
+                var endDateEl = $('#product_pack_enddate');
+                var endDate   = endDateEl.datepicker('getDate');
+
+                return endDate;
+            }
         });
     </script>
 <?php
