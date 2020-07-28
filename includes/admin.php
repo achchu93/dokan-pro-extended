@@ -270,7 +270,7 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
     </tr>
     <style>
         #ui-datepicker-div {
-            z-index: 999 !important;
+            z-index: 999999 !important;
         }
     </style>
     <script type="text/javascript">
