@@ -268,6 +268,11 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
             <p class="description"><?php _e( 'You can only assign non-recurring packs', 'dokan' ); ?></p>
         </td>
     </tr>
+    <style>
+        #ui-datepicker-div {
+            z-index: 999 !important;
+        }
+    </style>
     <script type="text/javascript">
         jQuery(document).ready( function($) {
             $('#product_pack_startdate, #product_pack_enddate').each( function() {
@@ -304,7 +309,7 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
 
             function getMaxStartDate(){
                 var endDateEl = $('#product_pack_enddate');
-                var endDate   = endDateEl.datepicker('getDate');
+                var endDate   = endDateEl.length ? endDateEl.datepicker('getDate') : '';
 
                 return endDate;
             }
