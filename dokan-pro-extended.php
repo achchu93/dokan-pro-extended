@@ -318,8 +318,8 @@ add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
  * Override vendor add new product template
  */
 function dpe_vendor_add_product_popup( $template, $slug, $name ) {
-
-    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single' );
+    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit' );
+    $slug          = str_replace( '.php', '', $slug );
 
     if( in_array( $slug, $product_temps ) ) {
         $child_theme_file = get_stylesheet_directory() . "/dokan/{$slug}.php";
@@ -333,6 +333,7 @@ function dpe_vendor_add_product_popup( $template, $slug, $name ) {
     return $template;
 }
 add_filter( 'dokan_get_template_part', 'dpe_vendor_add_product_popup', 10, 3 );
+add_filter( 'dokan_locate_template', 'dpe_vendor_add_product_popup', 10, 3 );
 
 
 /**
