@@ -275,7 +275,7 @@ do_action( 'dokan_dashboard_wrap_before', $post, $post_id );
                                                     'hierarchical'     => 0,
                                                     'hide_empty'       => 0,
                                                     'name'             => 'product_cat',
-                                                    'id'               => 'product_cat',
+                                                    'id'               => 'product_cat_'.$parent,
                                                     'taxonomy'         => 'product_cat',
                                                     'title_li'         => '',
                                                     'class'            => 'product_cat dokan-form-control dokan-select2',

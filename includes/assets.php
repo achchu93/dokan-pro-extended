@@ -24,7 +24,7 @@ function dpe_dashboard_media_library_style() {
 
     $page_id = dokan_get_option( 'dashboard', 'dokan_pages' );
 
-    if( empty( $page_id ) || !is_page( $page_id ) ) {
+    if( empty( $page_id ) || !( ( get_query_var( 'edit' ) && is_singular( 'product' ) ) || is_page( $page_id ) ) ) {
         return;
     }
 
