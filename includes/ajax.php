@@ -186,3 +186,17 @@ function dpe_get_child_category_el() {
 }
 add_action( 'wp_ajax_dpe_get_child_category_el', 'dpe_get_child_category_el' );
 add_action( 'wp_ajax_no_priv_dpe_get_child_category_el', 'dpe_get_child_category_el' );
+
+
+function dpe_ajax_save_subscription_start_date() {
+
+	update_user_meta( 
+		get_current_user_id(), 
+		'dokan_subscription_start_date', 
+		date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
+    );
+    
+    wp_send_json_success( true );
+}
+add_action( 'wp_ajax_dpe_save_subscription_start_date', 'dpe_ajax_save_subscription_start_date' );
+add_action( 'wp_ajax_no_priv_dpe_save_subscription_start_date', 'dpe_ajax_save_subscription_start_date' );

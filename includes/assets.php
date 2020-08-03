@@ -42,8 +42,22 @@ add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
  */
 function dpe_dokan_dashboard_css() {
     
-    //deactivating  css
-    $css = '';
+    ob_start();
+    ?>
+    #datepicker_container {
+        padding: 20px;
+    }
+    #datepicker_container .ui-datepicker-inline {
+        margin: auto;
+    }
+    #datepicker_container #cancel-picker {
+        float: right;
+        margin: 20px 0;
+        padding: 10px;
+        font-size: 1.2rem;
+    }
+    <?php
+    $css = ob_get_clean();
     
     return $css;
 }
@@ -108,6 +122,99 @@ function dpe_dokan_dashboard_js() {
                 });
             }
         } );
+
+
+        var restrictedDays = {},
+            chosenPack = null,
+            chosen = false;
+
+        var picker = $('#datepicker').datepicker({
+            minDate: new Date(),
+            defaultDate: new Date(),
+            dateFormat: 'yy-mm-dd',
+            onSelect: function(date, instance){
+                var wrapper = $('#datepicker_container');
+                wrapper.block({message:null});
+
+                $.ajax({
+                    url: dokan.ajaxurl,
+                    method: 'POST',
+                    data: {
+                        action: 'dpe_save_subscription_start_date',
+                        dokan_subscription_start_date: date
+                    }
+                }).then(function(response){
+                    if( response.data ){
+                        chosen = true;
+                        chosenPack.click();
+                    }
+                }).always(function(){
+                    $.unblockUI();
+                });
+            },
+            onChangeMonthYear: function(year, month, instance){
+                restrictDays(year, month);
+            },
+            beforeShowDay: function (date) {
+                var string = $.datepicker.formatDate('yy-mm-dd', date);
+                var month  = $.datepicker.formatDate('mm', date);
+                return [!restrictedDays[month] ||  restrictedDays[month].indexOf(string) == -1];
+            }
+        });
+
+        restrictDays(
+            $.datepicker.formatDate('yy', picker.datepicker('getDate')), 
+            $.datepicker.formatDate('mm', picker.datepicker('getDate'))
+        )
+
+        $('.product_pack_item').not('.current_pack').find('.buy_product_pack').on( 'click', function( e ) {
+            if( !chosenPack || !chosen ){
+                e.preventDefault();
+                chosenPack = $(this);
+                $.blockUI(
+                    { 
+                        message: $('#datepicker_container'), 
+                        css: { width: '400px' } 
+                    }
+                );
+            }else{
+                window.location.href = $(this).attr('href');
+            }
+        });
+
+        $('#cancel-picker').on( 'click', function(){
+            chosen     = false;
+            chosenPack = null;
+            $.unblockUI();
+        });
+
+        function restrictDays(year, month){
+            var blockDiv  = $('.ui-datepicker-inline');
+            var formatted = String(month).padStart(2, "0");
+
+            if( restrictedDays[formatted] ){
+                return;
+            }
+
+            setTimeout(function(){
+                blockDiv.block({message:null});
+            }, 50);
+
+            $.ajax({
+                url: dokan.ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'dpe_get_restrcited_days_for_month',
+                    year: year,
+                    month : month
+                }
+            }).then(function(response){
+                restrictedDays[formatted] = response.data;
+            }).always(function(){
+                blockDiv.unblock();
+                picker.datepicker('refresh');
+            });
+        }
     });
     <?php
     $js = ob_get_clean();
@@ -184,3 +291,15 @@ function dpe_registration_scripts() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_registration_scripts', 99 );
+
+
+function dpe_vendor_dashboard_picker() {
+    ?>
+    <div id="datepicker_container" style="display:none; cursor: default"> 
+        <p>Please choose a subscription start date. Default will be current date.</p>
+        <div id="datepicker"></div>
+        <button id="cancel-picker">Cancel</button>
+    </div> 
+    <?php
+}
+add_action( 'wp_footer', 'dpe_vendor_dashboard_picker' );
