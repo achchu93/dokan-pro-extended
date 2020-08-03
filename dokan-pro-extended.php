@@ -8,7 +8,7 @@
   Author URI: 
  */
 
-
+use WeDevs\Dokan\Walkers\TaxonomyDropdown;
 
 /**
  * Dependancies check
@@ -375,3 +375,29 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
 
     return $results;
 }
+
+
+/**
+ * Modify brand dropdown at vendor dashboard
+ */
+function dpe_brand_tags_data_attribute( $output, $args ) {
+
+    if( $args['taxonomy'] === 'product_brand' ) {
+        $output = str_replace( '<select', '<select data-tags="true"', $output );
+    }
+
+    return $output;
+}
+add_filter( 'wp_dropdown_cats', 'dpe_brand_tags_data_attribute', 10, 2 );
+
+
+/**
+ * Save brands on product add and edit
+ */
+function dpe_new_product_brand_added( $product_id, $data ) {
+    if( !empty( $data['product_brand'] ) ) {
+        wp_set_object_terms( $product_id, $data['product_brand'], 'product_brand' );
+    }
+}
+add_action( 'dokan_new_product_added', 'dpe_new_product_brand_added', 21, 2 );
+add_action( 'dokan_product_updated', 'dpe_new_product_brand_added', 21, 2 );
