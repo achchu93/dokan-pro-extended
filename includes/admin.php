@@ -22,11 +22,11 @@ function dpe_vendor_custom_product_id( $user ) {
     ?>
     <tr>
         <td>
-            <h3>Vendor product ID</h3>
+            <h3>Vendor Shelf Name & Location</h3>
         </td>
     </tr>
     <tr>
-        <th><label for="">Custom product ID</label></th>
+        <th><label for="">Shelf Address (Row.Number.Level)</label></th>
         <td>
             <select name="vendor_custom_product_id" id="vendor_custom_product_id">
                 <option value="">Select ID</option>

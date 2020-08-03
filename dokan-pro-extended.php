@@ -1,11 +1,11 @@
 <?php
 /**
   Plugin Name: Dokan Pro Extended
-  Plugin URI: https://github.com/achchu93/dokan-pro-extended
+  Plugin URI: 
   Description: An extension to customize Dokan Pro Plugin
   Version: 0.0.1
-  Author: Ahamed Arshad
-  Author URI: https://github.com/achchu93
+  Author: Faisal Akram
+  Author URI: 
  */
 
 

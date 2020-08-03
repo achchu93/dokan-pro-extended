@@ -41,63 +41,10 @@ add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
  * Vendor dashboard inline css
  */
 function dpe_dokan_dashboard_css() {
-    ob_start();
-    ?>
-    body.dokan-dashboard .media-modal.wp-core-ui {
-        outline: none;
-    }
-    body.dokan-dashboard .media-modal-content {
-        max-width: 600px;
-        height: 450px;
-        left: 0;
-        right: 0;
-        margin: auto;
-        border-radius: 0;
-        box-shadow: none;
-        background: #fff;
-        outline: none;
-    }
-    body.dokan-dashboard .media-frame-title {
-        display: none;
-    }
-    body.dokan-dashboard .media-frame-router {
-        top: 0;
-    }
-    body.dokan-dashboard .media-router {
-        text-align: center;
-    }
-    body.dokan-dashboard .media-menu-item {
-        border: none;
-        float: none;
-    }
-    body.dokan-dashboard .media-menu-item.active {
-        background: #0e8c3a !important;
-        color: #fff !important;
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    body.dokan-dashboard .media-frame-content {
-        border: none;
-        outline: none;
-    }
-    body.dokan-dashboard .uploader-inline .button {
-        color: #fff;
-        border-color: #0e8c3a;
-        background-color: #0e8c3a;
-        border-radius: 0;
-    }
-    body.dokan-dashboard .media-toolbar {
-        border: none;
-    }
-    body.dokan-dashboard .media-button-select,
-    body.dokan-dashboard .media-button-select[disabled] {
-        background-color: #0e8c3a !important;
-        border-color: #0e8c3a !important;
-        border-radius: 0;
-    }
-    <?php
-    $css = ob_get_clean();
-
+    
+    //deactivating  css
+    $css = '';
+    
     return $css;
 }
 
