@@ -401,3 +401,17 @@ function dpe_new_product_brand_added( $product_id, $data ) {
 }
 add_action( 'dokan_new_product_added', 'dpe_new_product_brand_added', 21, 2 );
 add_action( 'dokan_product_updated', 'dpe_new_product_brand_added', 21, 2 );
+
+
+/**
+ * Store ID on Vendor dashboard
+ */
+function dpe_dashboard_vendor_id(){
+    echo sprintf(
+        '<div class="dashboard-widget"><div class="widget-title" style="border:none;margin-bottom:0;">%s %s : %d</div></div>', 
+        '<i class="fa fa-home"></i>',
+        'Store ID', 
+        get_current_user_id()
+    );
+}
+add_action( 'dokan_dashboard_before_widgets', 'dpe_dashboard_vendor_id' );
