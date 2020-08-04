@@ -94,17 +94,32 @@ function dpe_sub_filled_count() {
     $start     = ( new DateTime( $_GET['start'] ) )->format('Y-m-d');
     $end       = ( new DateTime( $_GET['end'] ) )->format('Y-m-d');
 
-    $results = dpe_get_subscriptions_count( $start, $end );
+    $results = dpe_get_subscriptions_dates( $start, $end );
     $events  = array();
+    $dates   = array();
 
-    if( is_array( $results ) ) {
+    $l_date = $start;
+
+    while( $l_date < $end ) {
+
         foreach( $results as $result ) {
-            $events[] = array(
-                'title'  => "Subscribed {$result['s_count']}",
-                'start'  => date( 'Y-m-d', strtotime( $result['s_date'] ) )
-            );
+            $r_start = date( 'Y-m-d', strtotime( $result['startdate'] ) );
+            $r_end   = date( 'Y-m-d', strtotime( $result['enddate'] ) );
+
+            if( $l_date >= $r_start && $l_date <= $r_end  ) {
+                $events[] = array(
+                    'title'           => "Vendor #{$result['user_id']}",
+                    'backgroundColor' => "#4caf50",
+                    'borderColor'     => "#4caf50",
+                    'start'           => date( 'Y-m-d', strtotime( $l_date ) ),
+                    'url'             => get_edit_user_link( $result['user_id'] )
+                );
+            }
         }
+
+        $l_date  = date( 'Y-m-d', strtotime( '+1 day', strtotime( $l_date ) ) );
     }
+
     wp_send_json_success( $events );
 
 }

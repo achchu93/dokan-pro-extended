@@ -261,6 +261,24 @@ function dpe_get_subscriptions_count( $start, $end ) {
 
 
 /**
+ * Helper to get subscriptions dates with user
+ */
+function dpe_get_subscriptions_dates( $start, $end ) {
+    global $wpdb;
+
+    $query = $wpdb->prepare(
+        "SELECT meta.user_id, meta.meta_value as startdate, meta_1.meta_value as enddate
+        FROM {$wpdb->usermeta} meta
+        JOIN {$wpdb->usermeta} meta_1 ON meta.user_id = meta_1.user_id and meta_1.meta_key = 'product_pack_enddate'
+        WHERE meta.meta_key = 'product_pack_startdate' and 
+        ( CAST(meta.meta_value AS DATE) between %s and %s or CAST(meta_1.meta_value AS DATE) between %s and %s)",
+        array( $start, $end, $start, $end )
+    );
+    return $wpdb->get_results( $query, ARRAY_A );
+}
+
+
+/**
  * Register vendoe shelf taxonomy
  */
 function dpe_vendor_shelf_taxonomy() {

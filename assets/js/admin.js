@@ -6,6 +6,7 @@
         // The DOM is ready!
         var el = $('#subscription_calendar');
         var calendar = new FullCalendar.Calendar(el[0], {
+            dayMaxEvents: 5,
             initialView: 'dayGridMonth',
             selectable: true,
             lazyFetching: true,
