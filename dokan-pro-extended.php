@@ -433,3 +433,25 @@ function dpe_dashboard_vendor_id(){
     );
 }
 add_action( 'dokan_dashboard_before_widgets', 'dpe_dashboard_vendor_id' );
+
+
+/**
+ * Get vendor shelves by vendor id
+ */
+function dpe_get_vendor_shelves( $vendor_id ) {
+
+    $shelves = (array) get_user_meta( $vendor_id, 'vendor_custom_product_id', true );
+    if( empty( array_filter( $shelves ) ) ) {
+        return [];
+    }
+
+    $terms = array_map( 
+        function( $id ) {
+            $term = get_term( $id, 'vendor_shelf' );
+            return $term && !is_wp_error( $term ) ?  $term->name : "";
+        },
+        $shelves
+    );
+
+    return array_filter( $terms );
+}

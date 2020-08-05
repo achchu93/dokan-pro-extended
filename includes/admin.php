@@ -18,7 +18,7 @@ function dpe_vendor_custom_product_id( $user ) {
         'hide_empty' => false,
         'exclude'    => $exclude
     ));
-    $custom_product_id = get_user_meta( $user->ID, 'vendor_custom_product_id', true );
+    $shelves = (array) get_user_meta( $user->ID, 'vendor_custom_product_id', true );
     ?>
     <tr>
         <td>
@@ -28,10 +28,14 @@ function dpe_vendor_custom_product_id( $user ) {
     <tr>
         <th><label for="">Shelf Address (Row.Number.Level)</label></th>
         <td>
-            <select name="vendor_custom_product_id" id="vendor_custom_product_id">
-                <option value="">Select ID</option>
+            <select name="vendor_custom_product_id[]" 
+                id="vendor_custom_product_id" 
+                class="wc-enhanced-select" multiple="true" 
+                data-placeholder="Select ID"
+                style="min-width:350px;"
+            >
                 <?php foreach( $terms as $term ): ?>
-                <option value="<?php echo $term->term_id; ?>" <?php selected( intval( $custom_product_id ), $term->term_id, true ) ?> >
+                <option value="<?php echo $term->term_id; ?>" <?php selected( in_array( $term->term_id, $shelves ) ) ?> >
                     <?php echo $term->name; ?>
                 </option>
                 <?php endforeach; ?>
@@ -47,7 +51,7 @@ add_action( 'dokan_seller_meta_fields', 'dpe_vendor_custom_product_id', 11 );
  * Save custom product id to user meta
  */
 function dpe_save_vendor_custom_product_id( $user_id ) {
-    $product_id = !empty( $_POST['vendor_custom_product_id'] ) ? $_POST['vendor_custom_product_id'] : "";
+    $product_id = !empty( $_POST['vendor_custom_product_id'] ) ? $_POST['vendor_custom_product_id'] : array();
     update_user_meta( $user_id, 'vendor_custom_product_id', $product_id );
 }
 add_action( 'dokan_process_seller_meta_fields', 'dpe_save_vendor_custom_product_id' );
@@ -67,17 +71,9 @@ function dpe_order_line_item_product_id( $item_id, $item, $product ) {
         return;
     }
 
-    $custom_product_id = get_user_meta( $author_id, 'vendor_custom_product_id', true );
-    if( empty( $custom_product_id ) ) {
-        return;
-    }
+    $shelves = implode( ' - ', dpe_get_vendor_shelves( $author_id ) );
 
-    $term = get_term( $custom_product_id, 'vendor_shelf' );
-    if( !$term ) {
-        return;
-    }
-
-    printf( '<div class="vendor-product-id">Product ID: %s-%s</span>', $product->get_id(), $term->name );
+    printf( '<div class="vendor-product-id">Product ID: %s %s</span>', $product->get_id(), !empty( $shelves ) ? "- $shelves" : "" );
 }
 add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
 
@@ -88,10 +84,10 @@ add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id
 function dpe_product_list_table_custom_id( $actions, $post ) {
 
     if( $post->post_type === 'product' && dokan_is_user_seller( $post->post_author ) ) {
-        $custom_id = get_user_meta( $post->post_author, 'vendor_custom_product_id', true );
+        $shelves = implode( ' - ', dpe_get_vendor_shelves( $post->post_author ) );
 
-        if( !empty( $custom_id ) && ( $term = get_term( $custom_id, 'vendor_shelf' ) ) ) {
-            $actions['id'] = sprintf( 'ID: %s', "{$post->ID}-{$term->name}" );
+        if( !empty( $shelves ) ) {
+            $actions['id'] = sprintf( 'ID: %s', "{$post->ID} - {$shelves}" );
         }
     }
 
