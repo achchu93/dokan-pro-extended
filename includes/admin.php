@@ -75,7 +75,7 @@ function dpe_order_line_item_product_id( $item_id, $item, $product ) {
 
     printf( '<div class="vendor-product-id">Product ID: %s %s</span>', $product->get_id(), !empty( $shelves ) ? "- $shelves" : "" );
 }
-add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
+//add_action( 'woocommerce_before_order_itemmeta', 'dpe_order_line_item_product_id', 10, 3 );
 
 
 /**
@@ -93,7 +93,7 @@ function dpe_product_list_table_custom_id( $actions, $post ) {
 
     return $actions;
 }
-add_filter( 'post_row_actions', 'dpe_product_list_table_custom_id', 101, 2 );
+//add_filter( 'post_row_actions', 'dpe_product_list_table_custom_id', 101, 2 );
 
 
 /**
