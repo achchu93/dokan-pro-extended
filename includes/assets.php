@@ -93,9 +93,9 @@ function dpe_dokan_dashboard_js() {
                 if( parseInt( parentCat ) < 1 ) {
                     return;
                 }
-                if( $( '#dokan-add-new-product-form .product_cat' ).length > 3 ) {
+                <!-- if( $( '#dokan-add-new-product-form .product_cat' ).length > 3 ) {
                     return;
-                }
+                } -->
 
                 var wrapperEl = parentCatEl.parents('.product-full-container');
                 wrapperEl.block({message:null});
