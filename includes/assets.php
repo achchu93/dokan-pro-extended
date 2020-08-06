@@ -11,7 +11,7 @@
 function dpe_in_someones_cart_style() {
     wp_add_inline_style( 
         'dokan-style', 
-        '.loop-in-someones-cart{position:absolute;left:0;right:0;margin:1em auto 0;background:rgba(0,0,0,.3);color:#fff;width: 80%;padding: 5px;}' 
+        '.loop-in-someones-cart{position:absolute;left:0;right:0;margin:1em auto 0;background:rgba(0,0,0,.3);color:#fff;width: 80%;padding: 5px;text-align: center;z-index: 100;}' 
     );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
