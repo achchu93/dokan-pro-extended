@@ -400,8 +400,31 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
  */
 function dpe_brand_tags_data_attribute( $output, $args ) {
 
+    global $post;
+
     if( $args['taxonomy'] === 'product_brand' ) {
-        $output = str_replace( '<select', '<select data-tags="true"', $output );
+
+        $page_id = dokan_get_option( 'dashboard', 'dokan_pages' );
+
+        if( !is_page( $page_id ) && !( get_query_var( 'edit' ) && is_singular( 'product' ) ) ) {
+            return $output;
+        }
+
+        $selected = isset( $post ) ? wp_get_post_terms( $post->ID, 'product_brand' ) : [];
+        $terms    = get_terms( array( 'taxonomy' => 'product_brand', 'hide_empty' => false ) ); 
+        ob_start(); 
+        ?>
+
+        <select name="product_brand[]" id="product_brand" class="product_brand dokan-form-control dokan-select2" data-tags="true" multiple="true">
+        <?php foreach( $terms as $term ): ?>
+        <option value="<?php echo $term->term_id; ?>" <?php selected( in_array( $term->term_id, array_column( $selected, 'term_id' ) ) ); ?> >
+            <?php echo $term->name; ?>
+        </option>
+        <?php endforeach; ?>
+        </select>
+
+        <?php
+        $output = ob_get_clean();
     }
 
     return $output;
@@ -414,7 +437,13 @@ add_filter( 'wp_dropdown_cats', 'dpe_brand_tags_data_attribute', 10, 2 );
  */
 function dpe_new_product_brand_added( $product_id, $data ) {
     if( !empty( $data['product_brand'] ) ) {
-        wp_set_object_terms( $product_id, $data['product_brand'], 'product_brand' );
+        $brands = array_map( 
+            function( $term ) {
+                return intval($term) ? intval($term) : $term;
+            },
+            (array) $data['product_brand']
+        );
+        wp_set_object_terms( $product_id, $brands, 'product_brand', true );
     }
 }
 add_action( 'dokan_new_product_added', 'dpe_new_product_brand_added', 21, 2 );
