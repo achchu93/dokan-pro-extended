@@ -501,10 +501,35 @@ function dpe_vendor_product_sku( $sku, $product ) {
     if( dokan_is_user_seller( $author_id ) ) {
         $shelves = dpe_get_vendor_shelves( $author_id );
         if( !empty( $shelves ) ) {
-            $sku = $product->get_id() . ' - ' . implode( ' - ', dpe_get_vendor_shelves( $author_id ) );
-        }        
+            $new_sku = $product->get_id() . ' - ' . implode( ' - ', dpe_get_vendor_shelves( $author_id ) );
+            if( $sku !== $new_sku ) {
+                update_post_meta( $product->get_id(), '_sku', $new_sku );
+                $sku = $new_sku;
+            }
+        }
     }
 
     return $sku;
 }
 add_filter( 'woocommerce_product_get_sku', 'dpe_vendor_product_sku', 10, 2 );
+
+
+function dpe_vendor_product_sku_update(){    
+    global $pagenow;
+
+    $is_admin_edit = is_admin() && $pagenow === 'post.php' && ( !empty( $_GET['action'] ) && $_GET['action'] == 'edit' ) && !empty( $_GET['post'] );
+    if( !$is_admin_edit ) return;
+
+    $post_id = intval( $_GET['post'] );
+    $author_id = get_post_field( 'post_author', $post_id );
+    if( !$author_id || !dokan_is_user_seller( $author_id ) ) return;
+
+    $shelves = dpe_get_vendor_shelves( $author_id );
+    if( empty( $shelves ) ) return;
+
+    $sku = $post_id . ' - ' . implode( ' - ', $shelves );
+    if( get_post_meta( $post_id, '_sku', true ) !== $sku ) {
+        update_post_meta( $post_id, '_sku', $sku );
+    }
+}
+add_action( 'init', 'dpe_vendor_product_sku_update', 10 );
