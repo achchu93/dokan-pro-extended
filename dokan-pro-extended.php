@@ -490,3 +490,21 @@ function dpe_get_vendor_shelves( $vendor_id ) {
 
     return array_filter( $terms );
 }
+
+
+/**
+ * Show SKU based on Vendor Shelves
+ */
+function dpe_vendor_product_sku( $sku, $product ) {
+
+    $author_id = get_post_field( 'post_author', $product->get_id() );
+    if( dokan_is_user_seller( $author_id ) ) {
+        $shelves = dpe_get_vendor_shelves( $author_id );
+        if( !empty( $shelves ) ) {
+            $sku = $product->get_id() . ' - ' . implode( ' - ', dpe_get_vendor_shelves( $author_id ) );
+        }        
+    }
+
+    return $sku;
+}
+add_filter( 'woocommerce_product_get_sku', 'dpe_vendor_product_sku', 10, 2 );
