@@ -188,6 +188,12 @@ function dpe_update_dokan_added_product( $product_id, $post_data ) {
     update_post_meta( $product_id, '_stock', 1 );
     update_post_meta( $product_id, '_backorders', 'no' );
     update_post_meta( $product_id, '_low_stock_amount', 1 );
+
+
+    $shelves = dpe_get_vendor_shelves( get_post_field( 'post_author', $product_id ) );
+    if( !empty( $shelves ) ) {
+        update_post_meta( $product_id, '_sku', $product_id . ' - ' . implode( ' - ', $shelves ) );
+    }
 }
 add_action( 'dokan_new_product_added', 'dpe_update_dokan_added_product', 10, 2 );
 
