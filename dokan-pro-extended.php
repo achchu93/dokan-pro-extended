@@ -225,6 +225,7 @@ function dpe_in_someones_cart_to_loop() {
 
 }
 add_action( 'woocommerce_before_shop_loop_item_title', 'dpe_in_someones_cart_to_loop' );
+add_action( 'woocommerce_after_product_gallery', 'dpe_in_someones_cart_to_loop' );
 
 
 /**
