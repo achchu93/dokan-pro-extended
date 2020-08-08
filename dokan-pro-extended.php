@@ -220,7 +220,7 @@ function dpe_in_someones_cart_to_loop() {
     
 
     if( intval( $carts ) > 0 ) {
-        echo '<div class="loop-in-someones-cart">In Someone\'s Cart</div>';
+        echo '<div class="loop-in-someones-cart">This product is in another cart</div>';
     }
 
 }
