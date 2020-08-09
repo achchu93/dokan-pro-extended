@@ -18,42 +18,16 @@
                 };
             },
             select: function ( selection ) {
-                var start      = moment(selection.start);
-                var end        = moment(selection.end).add(-1, 'days');
-                var isMultiple = start.isSame(end) ? false : true;
-                var message    = 'Please set a limit for selection ';
-                var format     = 'Y-MM-DD';
-                
-                message += isMultiple ? start.format(format) + " to " + end.format(format) : start.format(format);
 
-                var limit = prompt( message, 1 );
-                limit     = parseInt(limit);
+                restrictDays( selection.start, selection.end )
+                    .then(function (response) {
+                        if (response.data) {
+                            var source = calendar.getEventSources()[0];
 
-                if( isNaN(limit) ){
-                    return;
-                }
-                
-                var data = {};
-                while( !start.isAfter(end) ){
-                    data[start.format('YYYY-MM-DD')] = limit;
-                    start.add(1, "days");
-                }
-
-                $.ajax({
-                    url: ajaxurl,
-                    method: 'POST',
-                    data: {
-                        action: 'dpe_save_restrcited_days',
-                        restricted_days: data
-                    }
-                }).then(function(response){
-                    if( response.data ) {
-                        var source = calendar.getEventSources()[0];
-
-                        source.refetch();
-                        calendar.unselect();
-                    }
-                });
+                            source.refetch();
+                            calendar.unselect();
+                        }
+                    });
             },
             eventSources: [
                 {
@@ -86,6 +60,78 @@
 
         // renders calendar
         calendar.render();
+
+
+        from = $("#fromDatepicker").datepicker({
+            minDate: new Date(),
+            dateFormat: 'dd-mm-yy',
+            onSelect: function(date){
+                to.datepicker("option", "minDate", moment(date, "DD-MM-YYYY").add(1, "days").toDate());
+
+                if (from.val() && to.val()) {
+                    $(".submit_date").attr('disabled', false);
+                }
+            }
+        }),
+        to = $("#toDatepicker").datepicker({
+            dateFormat: 'dd-mm-yy',
+            onSelect: function (date) {
+                from.datepicker("option", "maxDate", date);
+
+                if (from.val() && to.val()) {
+                    $(".submit_date").attr('disabled', false);
+                }
+            }
+        });
+
+        $( ".submit_date" ).on( 'click', function(){
+            if ( !from.val() || !to.val() ) {
+                return;
+            }
+            
+            restrictDays(from.datepicker('getDate'), moment(to.datepicker('getDate')).add(1, "days").toDate() )
+                .then(function (response) {
+                    if (response.data) {
+                        var source = calendar.getEventSources()[0];
+
+                        source.refetch();
+                        calendar.unselect();
+                    }
+                });
+        });
     });
+
+    function restrictDays( start, end ) {
+        console.log(start, end);
+        start = moment(start);
+        end = moment(end).add(-1, 'days');
+        var isMultiple = start.isSame(end) ? false : true;
+        var message = 'Please set a limit for selection ';
+        var format = 'Y-MM-DD';
+
+        message += isMultiple ? start.format(format) + " to " + end.format(format) : start.format(format);
+
+        var limit = prompt(message, 1);
+        limit = parseInt(limit);
+
+        if (isNaN(limit)) {
+            return new Promise(function(resolve){resolve({});});
+        }
+
+        var data = {};
+        while (!start.isAfter(end)) {
+            data[start.format('YYYY-MM-DD')] = limit;
+            start.add(1, "days");
+        }
+
+        return $.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'dpe_save_restrcited_days',
+                restricted_days: data
+            }
+        });
+    }
 
 }(jQuery));

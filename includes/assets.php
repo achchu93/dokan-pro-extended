@@ -259,13 +259,18 @@ function dpe_admin_assets() {
     wp_enqueue_script(
         'dpe-admin-js',
         plugins_url( '/assets/js/admin.js', DPE_PLUGIN ),
-        array(),
+        array('jquery-ui-datepicker'),
         true
     );
 
     wp_enqueue_style( 
         'full-calendar-css', 
         'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.css'
+    );
+
+    wp_enqueue_style( 
+        'jquery-ui-datepicker', 
+        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' 
     );
 
     wp_enqueue_style( 

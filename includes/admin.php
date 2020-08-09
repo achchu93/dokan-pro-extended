@@ -107,7 +107,7 @@ function dpe_admin_subscription_calendar() {
         'manage_options', 
         'subscription-calendar',
         function(){
-            echo '<div id="subscription_calendar"></div>';
+            echo '<div id="datepickerWidget"><input id="fromDatepicker" placeholder="From" /><input id="toDatepicker" placeholder="To" /><button type="button" class="submit_date button" disabled>Submit</button></div><div id="subscription_calendar"></div>';
         }
     );
 }
