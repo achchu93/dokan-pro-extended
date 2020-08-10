@@ -329,3 +329,28 @@ function dpe_save_pack_start_date( $user_id ) {
     }
 }
 add_action( 'dokan_process_seller_meta_fields', 'dpe_save_pack_start_date', 15 );
+
+
+/**
+ * Inject vendor ID column to User table
+ */
+function dpe_user_table_vendor_id_column( $columns ) {
+
+    $columns = array_slice($columns, 0, 3, true) + array("vendor_id" => "Vendor ID") + array_slice($columns, 3, count($columns) - 1, true) ;
+
+    return $columns;
+}
+add_filter( 'manage_users_columns', 'dpe_user_table_vendor_id_column' );
+
+
+/**
+ * Vendor ID Column data
+ */
+function dpe_user_table_vendor_id_column_data( $value, $column, $user_id ) {
+    if( $column === 'vendor_id' && dokan_is_user_seller( $user_id ) ) {
+        $value = $user_id;
+    }
+
+    return $value;
+}
+add_filter( 'manage_users_custom_column', 'dpe_user_table_vendor_id_column_data', 10, 3 );
