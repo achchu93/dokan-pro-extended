@@ -130,7 +130,7 @@ function dpe_dokan_dashboard_js() {
             chosen = false;
 
         var picker = $('#datepicker').datepicker({
-            minDate: new Date(),
+            minDate: "+3d",
             defaultDate: new Date(),
             dateFormat: 'yy-mm-dd',
             onSelect: function(date, instance){

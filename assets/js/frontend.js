@@ -9,7 +9,7 @@
         datePickerEl.datepicker({
             defaultDate: new Date(),
             dateFormat: "yy-mm-dd",
-            minDate: new Date(),
+            minDate: "+3d",
             maxDate: "+1y",
             onChangeMonthYear: function (year, month, instance) {
 

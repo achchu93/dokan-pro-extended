@@ -63,7 +63,7 @@
 
 
         from = $("#fromDatepicker").datepicker({
-            minDate: new Date(),
+            minDate: "+3d",
             dateFormat: 'dd-mm-yy',
             onSelect: function(date){
                 to.datepicker("option", "minDate", moment(date, "DD-MM-YYYY").add(1, "days").toDate());

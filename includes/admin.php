@@ -273,7 +273,7 @@ function dpe_add_subscription_packs_dropdown ( $user ) {
         jQuery(document).ready( function($) {
             $('#product_pack_startdate, #product_pack_enddate').each( function() {
                 $(this).datepicker({
-                    minDate: $(this).is('#product_pack_enddate') ?  getMinEndDate() : new Date(),
+                    minDate: $(this).is('#product_pack_enddate') ?  getMinEndDate() : "+3d",
                     maxDate: $(this).is('#product_pack_startdate') ? getMaxStartDate(): null,
                     onSelect: function( date, instance ) {
                         if( instance.id === 'product_pack_startdate' ) {
