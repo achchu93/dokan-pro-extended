@@ -1,11 +1,12 @@
 (function ($, window, document) {
 
     // var adminDatepicker;
+    var calendar;
 
     $(function () {
         // The DOM is ready!
         var el = $('#subscription_calendar');
-        var calendar = new FullCalendar.Calendar(el[0], {
+        calendar = new FullCalendar.Calendar(el[0], {
             dayMaxEvents: 5,
             initialView: 'dayGridMonth',
             selectable: true,
@@ -31,6 +32,7 @@
             },
             eventSources: [
                 {
+                    id: 1,
                     url: ajaxurl,
                     method: 'GET',
                     extraParams: {
@@ -42,6 +44,7 @@
                     },
                 },
                 {
+                    id: 2,
                     url: ajaxurl,
                     method: 'GET',
                     extraParams: {
@@ -102,7 +105,7 @@
     });
 
     function restrictDays( start, end ) {
-        console.log(start, end);
+
         start = moment(start);
         end = moment(end).add(-1, 'days');
         var isMultiple = start.isSame(end) ? false : true;
@@ -119,8 +122,19 @@
         }
 
         var data = {};
+        var hasLimitExceeds = false;
         while (!start.isAfter(end)) {
-            data[start.format('YYYY-MM-DD')] = limit;
+
+            var events = calendar.getEvents().filter( function( event ){
+                return moment(event.start).isSame(start) && !event.extendedProps.count;
+            });
+
+            if( events.length > limit ){
+                hasLimitExceeds = true;
+            }else{
+                data[start.format('YYYY-MM-DD')] = limit;
+            }
+
             start.add(1, "days");
         }
 
@@ -130,6 +144,11 @@
             data: {
                 action: 'dpe_save_restrcited_days',
                 restricted_days: data
+            },
+            success: function() {
+                if( hasLimitExceeds ){
+                    alert('There were limits lower than registered vendors. Skipped those while saving.');
+                }
             }
         });
     }

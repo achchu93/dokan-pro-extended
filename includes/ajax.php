@@ -76,7 +76,8 @@ function dpe_sub_restricted_days() {
     foreach( $days as $day => $count ) {
         $events[] = array(
             'title'  => "Limited to $count",
-            'start'  => date( 'Y-m-d', $day )
+            'start'  => date( 'Y-m-d', $day ),
+            'count'  => $count
         );
     }
 
