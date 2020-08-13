@@ -369,33 +369,32 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
     $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
     $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
 
-    $key           = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
-    $days          = get_option( $key, array() );
-    $subscriptions = dpe_get_subscriptions_count( $start->format('Y-m-d'), $end->format('Y-m-d') );
+    $option_key    = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
+    $days          = get_option( $option_key, array() );
 
     $results = array();
+    $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $end->format('Y-m-d') );
+    $l_date  = $start->format('Y-m-d');
+    $s_count = array();
 
-    if( is_array( $days ) && is_array( $subscriptions ) ) {
-        $filtered = array_filter(
-            $days,
-            function( $count, $date ) use ($subscriptions) {
-                $s_date = array_filter( 
-                    $subscriptions,
-                    function( $subscription ) use ($count, $date) {
-                        return $count < 1 || date( 'Y-m-d', intval( $date ) ) === date( 'Y-m-d', strtotime( $subscription['s_date'] ) );
-                    }
-                );
-                return reset( $s_date ) && intval( $count ) <= intval( $s_date[0]['s_count'] );
-            },
-            ARRAY_FILTER_USE_BOTH
-        );
+    while( $l_date < $end->format('Y-m-d') ) {
 
-        $results = array_map(
-            function( $date ) {
-                return date( 'Y-m-d', intval( $date ) );
-            },
-            array_keys( $filtered )
-        );
+        $key = strtotime( $l_date );
+
+        foreach( $dates as $date ) {
+            $r_start = date( 'Y-m-d', strtotime( $date['startdate'] ) );
+            $r_end   = date( 'Y-m-d', strtotime( $date['enddate'] ) );
+
+            if( $l_date >= $r_start && $l_date <= $r_end  ) {
+                $s_count[$key] = array_key_exists( $key, $s_count ) ? $s_count[$key] + 1 : 1;
+            }
+        }
+
+        if( isset( $days[$key], $s_count[$key] ) && intval( $days[$key] ) <= $s_count[$key] ) {
+            $results[] = date( 'Y-m-d', intval( $key ) );
+        }
+
+        $l_date  = date( 'Y-m-d', strtotime( '+1 day', strtotime( $l_date ) ) );
     }
 
     return $results;

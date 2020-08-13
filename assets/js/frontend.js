@@ -25,6 +25,7 @@
 
                 if( !date ) return;
 
+                showLoadingOnDatePicker(instance.dpDiv);
                 setRestrcitedDays(
                     $.datepicker.formatDate('yy', date), 
                     $.datepicker.formatDate('mm', date), 
