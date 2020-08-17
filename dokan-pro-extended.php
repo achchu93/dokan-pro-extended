@@ -58,7 +58,7 @@ function dpe_subscription_checkout_field( $fields ) {
     </p>
     <?php
 }
-add_action( 'dokan_seller_registration_field_after', 'dpe_subscription_checkout_field', 11 );
+//add_action( 'dokan_seller_registration_field_after', 'dpe_subscription_checkout_field', 11 );
 
 
 /**
