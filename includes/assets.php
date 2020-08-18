@@ -51,11 +51,10 @@ function dpe_dokan_dashboard_css() {
     #datepicker_container .ui-datepicker-inline {
         margin: auto;
     }
-    #datepicker_container #cancel-picker {
-        float: right;
-        margin: 20px 0;
-        padding: 10px;
-        font-size: 1.2rem;
+    #datepicker_container .actions {
+        display: flex;
+        margin-top: 20px;
+        justify-content: space-between;
     }
     <?php
     $css = ob_get_clean();
@@ -134,24 +133,8 @@ function dpe_dokan_dashboard_js() {
             defaultDate: new Date(),
             dateFormat: 'yy-mm-dd',
             onSelect: function(date, instance){
-                var wrapper = $('#datepicker_container');
-                wrapper.block({message:null});
-
-                $.ajax({
-                    url: dokan.ajaxurl,
-                    method: 'POST',
-                    data: {
-                        action: 'dpe_save_subscription_start_date',
-                        dokan_subscription_start_date: date
-                    }
-                }).then(function(response){
-                    if( response.data ){
-                        chosen = true;
-                        chosenPack.click();
-                    }
-                }).always(function(){
-                    $.unblockUI();
-                });
+                console.log(date);
+                $('#submit-picker').removeAttr('disabled');
             },
             onChangeMonthYear: function(year, month, instance){
                 restrictDays(year, month);
@@ -187,6 +170,27 @@ function dpe_dokan_dashboard_js() {
             chosen     = false;
             chosenPack = null;
             $.unblockUI();
+        });
+
+        $('#submit-picker').on( 'click', function(){
+            var wrapper = $('#datepicker_container');
+            wrapper.block({message:null});
+
+            $.ajax({
+                url: dokan.ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'dpe_save_subscription_start_date',
+                    dokan_subscription_start_date: $.datepicker.formatDate('yy-mm-dd', picker.datepicker('getDate'))
+                }
+            }).then(function(response){
+                if( response.data ){
+                    chosen = true;
+                    chosenPack.click();
+                }
+            }).always(function(){
+                $.unblockUI();
+            });
         });
 
         function restrictDays(year, month){
@@ -304,7 +308,10 @@ function dpe_vendor_dashboard_picker() {
     <div id="datepicker_container" style="display:none; cursor: default"> 
         <p>Please choose a subscription start date. Default will be current date.</p>
         <div id="datepicker"></div>
-        <button id="cancel-picker">Cancel</button>
+        <div class="actions">
+            <button id="cancel-picker" class="button">Cancel</button>
+            <button id="submit-picker" class="button" disabled>Submit</button>
+        </div>
     </div> 
     <?php
 }
