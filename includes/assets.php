@@ -45,16 +45,24 @@ function dpe_dokan_dashboard_css() {
     
     ob_start();
     ?>
-    #datepicker_container {
+    #datepicker_container,
+    #sale_input_container {
         padding: 20px;
     }
     #datepicker_container .ui-datepicker-inline {
         margin: auto;
     }
-    #datepicker_container .actions {
+    #datepicker_container .actions,
+    #sale_input_container .actions {
         display: flex;
         margin-top: 20px;
         justify-content: space-between;
+    }
+    #sale_input {
+        width: 100%;
+        padding: 1em;
+        border: 1px solid #ddd;
+        outline: none !important;
     }
     <?php
     $css = ob_get_clean();
@@ -166,7 +174,7 @@ function dpe_dokan_dashboard_js() {
             }
         });
 
-        $('#cancel-picker').on( 'click', function(){
+        $('#cancel-picker, #cancel-sale').on( 'click', function(){
             chosen     = false;
             chosenPack = null;
             $.unblockUI();
@@ -191,6 +199,38 @@ function dpe_dokan_dashboard_js() {
             }).always(function(){
                 $.unblockUI();
             });
+        });
+
+        $('#bulk-product-action').on( 'click', function(e){
+            if( $('#bulk-product-action-selector').val() === 'sale' && !$('#sale_value').length ){
+                e.preventDefault();
+                $.blockUI(
+                    { 
+                        message: $('#sale_input_container'), 
+                        css: { width: '350px' } 
+                    }
+                );
+            }
+        });
+
+        $('#sale_input').on( 'input change', function(e){
+            var value =  parseFloat($(this).val());
+            var submit = $('#submit-sale');
+            if( !isNaN(value) ){
+                submit.removeAttr('disabled');
+            }else{
+                submit.attr('disabled', true);
+            }
+        });
+
+        $('#submit-sale').on( 'click', function(e){
+            var value =  parseFloat($('#sale_input').val());
+            if( !isNaN(value) ){
+                $('#sale_value').remove();
+                $('<input type="hidden" name="sale_value" id="sale_value" value='+value+' />').insertAfter($('#security'));
+            }
+            $.unblockUI();
+            $('#bulk-product-action').click();
         });
 
         function restrictDays(year, month){
@@ -316,3 +356,18 @@ function dpe_vendor_dashboard_picker() {
     <?php
 }
 add_action( 'wp_footer', 'dpe_vendor_dashboard_picker' );
+
+
+function dpe_vendor_dashboard_sale_input() {
+    ?>
+    <div id="sale_input_container" style="display:none; cursor: default"> 
+        <p>Please input a sale percentage to be applied for products.</p>
+        <input type="number" id="sale_input">
+        <div class="actions">
+            <button id="cancel-sale" class="button">Cancel</button>
+            <button id="submit-sale" class="button" disabled>Submit</button>
+        </div>
+    </div> 
+    <?php
+}
+add_action( 'wp_footer', 'dpe_vendor_dashboard_sale_input' );

@@ -533,3 +533,41 @@ function dpe_vendor_product_sku_update(){
     }
 }
 add_action( 'init', 'dpe_vendor_product_sku_update', 10 );
+
+
+/**
+ * Add vendor dashboard bulk sale price
+ */
+function dpe_vendor_bulk_sale_price( $statuses ) {
+
+    $statuses['sale'] = 'Sale Price'; 
+
+    return $statuses;
+}
+add_filter( 'dokan_bulk_product_statuses', 'dpe_vendor_bulk_sale_price' );
+
+
+/**
+ * Process vendor dashboard bulk sale price
+ */
+function dpe_vendor_bulk_sale_price_process( $status, $products ){
+    
+    $sale_percent = !empty( $_POST['sale_value'] ) ? floatval( $_POST['sale_value'] ) : 0;
+
+    foreach( $products as $product ) {
+        $price = floatval( get_post_meta( $product, '_regular_price', true ) );
+        if( !$price ) {
+            continue;
+        }
+
+        if( $sale_percent > 0 ) {
+            $sale_price = $price - ( $price * ( $sale_percent / 100 ) );
+        }else{
+            $sale_price = "";
+        }
+        
+        update_post_meta( $product, '_sale_price',  $sale_price );
+    }
+
+}
+add_action( 'dokan_bulk_product_status_change', 'dpe_vendor_bulk_sale_price_process', 10, 2 );
