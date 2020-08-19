@@ -320,9 +320,25 @@ add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
  * Assign available vendor shelf for vendor
  */
 function dpe_update_vendor_shelf ( $user_id, $settings ) {
+    $terms = get_unused_shelves();
+
+    if( is_array( $terms ) && count( $terms ) ) {
+        $term = current( $terms );
+        update_user_meta( $user_id, 'vendor_custom_product_id', $term->term_id );
+    }
+}
+add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
+
+
+function get_unused_shelves() {
     global $wpdb;
 
     $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and 1=1" );
+    $occupied = array_map( function( $value ){
+        return (array) $value;
+    }, array_map( 'maybe_unserialize', $occupied ) );
+    $occupied = call_user_func_array( 'array_merge', $occupied );
+
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
     
     $terms = get_terms( array(
@@ -330,13 +346,9 @@ function dpe_update_vendor_shelf ( $user_id, $settings ) {
         'hide_empty' => false,
         'exclude'    => $exclude
     ));
-    
-    if( is_array( $terms ) && count( $terms ) ) {
-        $term = current( $terms );
-        update_user_meta( $user_id, 'vendor_custom_product_id', $term->term_id );
-    }
+
+    return $terms;
 }
-add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
 
 
 /**
@@ -377,20 +389,23 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
     $l_date  = $start->format('Y-m-d');
     $s_count = array();
 
-    while( $l_date < $end->format('Y-m-d') ) {
+    while( $l_date <= $end->format('Y-m-d') ) {
 
-        $key = strtotime( $l_date );
+        $key          = strtotime( $l_date );
+        $shelves_left = get_unused_shelves();
 
-        foreach( $dates as $date ) {
-            $r_start = date( 'Y-m-d', strtotime( $date['startdate'] ) );
-            $r_end   = date( 'Y-m-d', strtotime( $date['enddate'] ) );
+        if( count( $shelves_left ) ) {
+            foreach( $dates as $date ) {
+                $r_start = date( 'Y-m-d', strtotime( $date['startdate'] ) );
+                $r_end   = date( 'Y-m-d', strtotime( $date['enddate'] ) );
 
-            if( $l_date >= $r_start && $l_date <= $r_end  ) {
-                $s_count[$key] = array_key_exists( $key, $s_count ) ? $s_count[$key] + 1 : 1;
+                if( $l_date >= $r_start && $l_date <= $r_end  ) {
+                    $s_count[$key] = array_key_exists( $key, $s_count ) ? $s_count[$key] + 1 : 1;
+                }
             }
         }
 
-        if( isset( $days[$key], $s_count[$key] ) && intval( $days[$key] ) <= $s_count[$key] ) {
+        if( !count( $shelves_left ) || isset( $days[$key], $s_count[$key] ) && intval( $days[$key] ) <= $s_count[$key] ) {
             $results[] = date( 'Y-m-d', intval( $key ) );
         }
 
