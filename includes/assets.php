@@ -198,6 +198,7 @@ function dpe_dokan_dashboard_js() {
                 }
             }).always(function(){
                 $.unblockUI();
+                $('body').block({message:null});
             });
         });
 
