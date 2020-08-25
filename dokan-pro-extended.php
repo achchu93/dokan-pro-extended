@@ -355,7 +355,7 @@ function get_unused_shelves() {
  * Override vendor add new product template
  */
 function dpe_vendor_add_product_popup( $template, $slug, $name ) {
-    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit' );
+    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit', 'store-lists-filter' );
     $slug          = str_replace( '.php', '', $slug );
 
     if( in_array( $slug, $product_temps ) ) {
