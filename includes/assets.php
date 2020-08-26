@@ -141,8 +141,53 @@ function dpe_dokan_dashboard_js() {
             defaultDate: new Date(),
             dateFormat: 'yy-mm-dd',
             onSelect: function(date, instance){
-                console.log(date);
-                $('#submit-picker').removeAttr('disabled');
+                $('.ui-datepicker-inline').block({message:null}); //added
+
+                console.log('date',date);
+                console.log('restricted',restrictedDays); //added
+
+                //added later
+
+                var weeks = jQuery("div.jet-tabs div.active-tab").attr('data-tab');
+                var days = weeks * 7;
+                days  = days-1;
+
+                this_date = new Date(date);
+                next_date = new Date(date);
+                next_date = next_date.setDate(next_date.getDate() + days);
+
+                var getDaysArray = function(s,e) {for(var a=[],d=new Date(s);d<=e;d.setDate(d.getDate()+1)){ a.push(new Date(d));}return a;};
+
+                all_days = getDaysArray(this_date, next_date);
+                all_days = all_days.map((v)=>v.toISOString().slice(0,10));
+
+                console.log('all_days',all_days); //added
+
+
+                restrictedDaysOnly = restrictedDays[Object.keys(restrictedDays)[0]];
+
+                if( all_days.some(r=> restrictedDaysOnly.indexOf(r) >= 0) ){ //true if any of all_days date is in restrictedDays array
+
+                    var conflict_first_date = all_days.filter(function(item){ return restrictedDaysOnly.indexOf(item) > -1});
+                    
+                    var this_date_human = this_date.toLocaleDateString();
+                    var next_date_human = new Date(next_date); next_date_human = next_date_human.toLocaleDateString();
+                    var conflict_first_date_human = new Date(conflict_first_date[0]); conflict_first_date_human = conflict_first_date_human.toLocaleDateString();
+
+
+                    alert('Selected subscription period  from '+this_date_human+' to '+next_date_human+' includes '+conflict_first_date_human+', which is not available. Please choose a different subscription start date.');
+                //    $('#datepicker').datepicker('setDate', null);  //this returns user to initial month
+
+                    $('#submit-picker').attr('disabled', true);
+
+
+
+                }else{
+                    $('#submit-picker').removeAttr('disabled');
+                }
+
+
+                $('.ui-datepicker-inline').unblock(); //added
             },
             onChangeMonthYear: function(year, month, instance){
                 restrictDays(year, month);
@@ -178,6 +223,10 @@ function dpe_dokan_dashboard_js() {
             chosen     = false;
             chosenPack = null;
             $.unblockUI();
+
+            $('#datepicker').datepicker('setDate', null); //set back the dates
+            $('#submit-picker').attr('disabled', true);
+
         });
 
         $('#submit-picker').on( 'click', function(){
@@ -235,7 +284,11 @@ function dpe_dokan_dashboard_js() {
         });
 
         function restrictDays(year, month){
-            var blockDiv  = $('.ui-datepicker-inline');
+
+
+            restrictedDays = {}; // resetting for now to avoid confusion, can use it later to optimize performance
+
+            var blockDiv  = $('.ui-datepicker-inline');  
             var formatted = String(month).padStart(2, "0");
 
             if( restrictedDays[formatted] ){
@@ -256,6 +309,7 @@ function dpe_dokan_dashboard_js() {
                 }
             }).then(function(response){
                 restrictedDays[formatted] = response.data;
+                console.log(response.data); //added
             }).always(function(){
                 blockDiv.unblock();
                 picker.datepicker('refresh');

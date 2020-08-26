@@ -66,11 +66,11 @@ function dpe_subscription_checkout_field( $fields ) {
  */
 function dpe_save_subscription_start_date( $user_id, $dokan_settings ) {
 
-	update_user_meta( 
-		$user_id, 
-		'dokan_subscription_start_date', 
-		date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
-	);
+    update_user_meta( 
+        $user_id, 
+        'dokan_subscription_start_date', 
+        date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
+    );
 }
 add_action( 'dokan_new_seller_created', 'dpe_save_subscription_start_date', 10, 2 );
 
@@ -80,22 +80,22 @@ add_action( 'dokan_new_seller_created', 'dpe_save_subscription_start_date', 10, 
  */
 function dpe_extende_subscription_start_date( $vendor_id ) {
 
-	$pack_id   =  get_user_meta( $vendor_id, 'product_package_id', true );
-	$date_meta = get_user_meta( $vendor_id, 'dokan_subscription_start_date', true );
+    $pack_id   =  get_user_meta( $vendor_id, 'product_package_id', true );
+    $date_meta = get_user_meta( $vendor_id, 'dokan_subscription_start_date', true );
 
-	if( !$pack_id || empty( $pack_id ) || empty( $date_meta ) ) {
-		return;
-	}
+    if( !$pack_id || empty( $pack_id ) || empty( $date_meta ) ) {
+        return;
+    }
 
-	$pack_id       = intval( $pack_id );
-	$validitiy     = get_post_meta( $pack_id, '_pack_validity', true );
+    $pack_id       = intval( $pack_id );
+    $validitiy     = get_post_meta( $pack_id, '_pack_validity', true );
 
-	if( empty( $validitiy ) ) {
-		$validitiy = 'unlimited';
-	}
+    if( empty( $validitiy ) ) {
+        $validitiy = 'unlimited';
+    }
 
-	update_user_meta( $vendor_id, 'product_pack_startdate', date( 'Y-m-d H:i:s', strtotime( $date_meta ) ) );
-	update_user_meta( $vendor_id, 'product_pack_enddate', date( 'Y-m-d H:i:s', strtotime( "+$validitiy days", strtotime( $date_meta ) ) ) );
+    update_user_meta( $vendor_id, 'product_pack_startdate', date( 'Y-m-d H:i:s', strtotime( $date_meta ) ) );
+    update_user_meta( $vendor_id, 'product_pack_enddate', date( 'Y-m-d H:i:s', strtotime( "+$validitiy days", strtotime( $date_meta ) ) ) );
 
 }
 add_action( 'dokan_vendor_purchased_subscription', 'dpe_extende_subscription_start_date' );
@@ -129,7 +129,7 @@ function dpe_validate_subscription_start_date( $error ) {
 
     return $error;
 }
-add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
+//add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
 
 
 /**
@@ -289,29 +289,29 @@ function dpe_get_subscriptions_dates( $start, $end ) {
  * Register vendoe shelf taxonomy
  */
 function dpe_vendor_shelf_taxonomy() {
-	register_taxonomy(
-		'vendor_shelf',
-		'user',
-		array(
+    register_taxonomy(
+        'vendor_shelf',
+        'user',
+        array(
             'description' => 'Vendor Shelves which will be assigned per a vendor',
-			'public' => true,
-			'labels' => array(
-				'name'		=> 'Vendor Shelves',
-				'singular_name'	=> 'Vendor Shelf',
-				'menu_name'	=> 'Vendor Shelves',
-				'search_items'	=> 'Search Vendor Shelf',
-				'popular_items' => 'Popular Vendor Shelves',
-				'all_items'	=> 'All Vendor Shelves',
-				'edit_item'	=> 'Edit Vendor Shelf',
-				'update_item'	=> 'Update Vendor Shelf',
-				'add_new_item'	=> 'Add New Vendor Shelf',
-				'new_item_name'	=> 'New Vendor Shelf Name',
+            'public' => true,
+            'labels' => array(
+                'name'      => 'Vendor Shelves',
+                'singular_name' => 'Vendor Shelf',
+                'menu_name' => 'Vendor Shelves',
+                'search_items'  => 'Search Vendor Shelf',
+                'popular_items' => 'Popular Vendor Shelves',
+                'all_items' => 'All Vendor Shelves',
+                'edit_item' => 'Edit Vendor Shelf',
+                'update_item'   => 'Update Vendor Shelf',
+                'add_new_item'  => 'Add New Vendor Shelf',
+                'new_item_name' => 'New Vendor Shelf Name',
             ),
             'update_count_callback' => function() {
-				return;
-			}
-		)
-	);
+                return;
+            }
+        )
+    );
 }
 add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
 
@@ -341,9 +341,13 @@ function get_unused_shelves() {
 
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
     
+    //added orderby and order keys in args array.
+    
     $terms = get_terms( array(
         'taxonomy'   => 'vendor_shelf',
         'hide_empty' => false,
+        'orderby'=>'term_id',
+        'order' => 'ASC',
         'exclude'    => $exclude
     ));
 
@@ -379,10 +383,26 @@ add_filter( 'dokan_locate_template', 'dpe_vendor_add_product_popup', 10, 3 );
 function dpe_get_restrcited_days_for_month( $year, $month ) {
 
     $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
-    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
+    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month+1 ), intval( 30 ) );
 
     $option_key    = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
-    $days          = get_option( $option_key, array() );
+    $option_key_next    = "sub_restricted_days_{$start->format('Y')}{$end->format('m')}";
+
+
+    $days_this          = get_option( $option_key, array() );
+    $days_next          = get_option( $option_key_next, array() );
+
+    // $days = array_merge($days_this, $days_next); //resets keys
+
+    foreach($days_next as $key => $value){
+        $days_this[$key] = $value;
+    }
+    
+    $days = $days_this;
+
+
+    // print_r($days);
+    // die('now');
 
     $results = array();
     $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $end->format('Y-m-d') );
