@@ -359,7 +359,7 @@ function get_unused_shelves() {
  * Override vendor add new product template
  */
 function dpe_vendor_add_product_popup( $template, $slug, $name ) {
-    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit', 'store-lists-filter' );
+    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit', 'store-lists-filter', 'settings/store-form' );
     $slug          = str_replace( '.php', '', $slug );
 
     if( in_array( $slug, $product_temps ) ) {
@@ -606,3 +606,80 @@ function dpe_vendor_bulk_sale_price_process( $status, $products ){
 
 }
 add_action( 'dokan_bulk_product_status_change', 'dpe_vendor_bulk_sale_price_process', 10, 2 );
+
+
+/**
+ * Process vendor sales settings
+ */
+function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
+
+    $post_data = wp_unslash( $_POST );
+    $rate      = !empty( $post_data['dokan_store_discount_rate'] ) ? $post_data['dokan_store_discount_rate'] : '';
+    $start     = !empty( $post_data['dokan_store_discount_start'] ) ? $post_data['dokan_store_discount_start'] : '';
+    $end       = !empty( $post_data['dokan_store_discount_end'] ) ? $post_data['dokan_store_discount_end'] : '';
+
+    if( $rate = floatval( $rate ) ) {
+        update_user_meta( $vendor_id, 'store_discount_rate', $rate );
+    }
+
+    if( !empty( $start ) ) {
+        $start = date( 'Y-m-d 00:00:00', strtotime( $start ) );
+        update_user_meta( $vendor_id, 'store_discount_start', $start );
+    }
+
+    if( !empty( $end ) ) {
+        $end = date( 'Y-m-d 23:59:59', strtotime( $end ) );
+        update_user_meta( $vendor_id, 'store_discount_end', $end );
+    }
+
+
+    $products = wc_get_products( array(
+        'status' => 'publish',
+        'limit'  => -1,
+        'author' => $vendor_id
+    ));
+
+    foreach( $products as $product ) {
+
+        $sale_price = '';
+
+        if( $product->get_children() ) {
+
+            foreach( $product->get_children_() as $variation ) {
+
+                if( $rate ){
+                    $sale_price = $variation->get_price() - ( $variation->get_price() * ( $rate / 100 ) ); 
+                }
+                $errors = $variation->set_props(
+                    array(
+                        'date_on_sale_from' => $start,
+                        'date_on_sale_to'   => $end,
+                        'sale_price'        => $sale_price
+                    )
+                );
+                
+                if( !is_wp_error( $errors ) ) {
+                    $variation->save();
+                }
+            }
+            continue;
+        }
+
+        if( $rate ){
+            $sale_price = $product->get_price() - ( $product->get_price() * ( $rate / 100 ) ); 
+        }
+        $errors = $product->set_props(
+            array(
+                'date_on_sale_from' => $start,
+                'date_on_sale_to'   => $end,
+                'sale_price'        => $sale_price
+            )
+        );
+        if( !is_wp_error( $errors ) ) {
+            $product->save();
+        }
+
+    }
+
+}
+add_action( 'dokan_store_profile_saved', 'dpe_save_vendor_sales_data', 10, 2 );

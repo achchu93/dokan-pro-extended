@@ -283,6 +283,28 @@ function dpe_dokan_dashboard_js() {
             $('#bulk-product-action').click();
         });
 
+
+        $('#dokan-store-discount-start, #dokan-store-discount-end').each(function(){
+            var el = $(this);
+
+            $(this).datepicker({
+				defaultDate:     '',
+				dateFormat:      'yy-mm-dd',
+				numberOfMonths:  1,
+                onSelect: function( date, instance ){
+                    el.val(date);
+                }
+            });
+
+            $(this).on('change blur', function(){
+                var pattern = new RegExp($(this).prop('pattern'));
+                if( !pattern.test( el.val() ) ){
+                    el.val('');
+                }
+                console.log(pattern, pattern.test( el.val() ));
+            });
+        });
+
         function restrictDays(year, month){
 
 
