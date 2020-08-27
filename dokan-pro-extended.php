@@ -740,7 +740,7 @@ add_action( 'pre_get_users', 'dpe_vendor_list_filter' );
 function dpe_newly_added_product_msg( $url, $product_id ) {
     return add_query_arg( 'new', $product_id, $url );
 }
-add_filter( 'dokan_add_new_product_redirect', 'dpe_newly_added_product_msg' );
+add_filter( 'dokan_add_new_product_redirect', 'dpe_newly_added_product_msg', 10, 2 );
 
 
 function dpe_listing_product_new_product_msg() {
@@ -755,3 +755,12 @@ function dpe_listing_product_new_product_msg() {
 
 }
 add_action( 'dokan_before_listing_product', 'dpe_listing_product_new_product_msg' );
+
+
+function dpe_widgets_registration(){
+
+    require_once dirname( __FILE__ ) . "/includes/widget-last-chance-products.php";
+    register_widget( 'DPE_Last_Chance_Product_Widget' );
+
+}
+add_action( 'widgets_init', 'dpe_widgets_registration', 11 );
