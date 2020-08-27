@@ -1,0 +1,109 @@
+/**
+* Vendor dashboard styles
+*/
+
+#datepicker_container,
+#sale_input_container {
+    padding: 20px;
+}
+
+#datepicker_container .ui-datepicker-inline {
+    margin: auto;
+}
+
+#datepicker_container .actions,
+#sale_input_container .actions {
+    display: flex;
+    margin-top: 20px;
+    justify-content: space-between;
+}
+
+#sale_input {
+    width: 100%;
+    padding: 1em;
+    border: 1px solid #ddd;
+    outline: none !important;
+}
+
+
+/**
+* Store list styles
+*/
+.dokan_lists_filter_form_footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px !important;
+}
+
+.dokan_lists_filter_form_footer .sale-price label {
+    color: #444;
+    font-weight: 900 !important;
+}
+
+.dokan_lists_filter_form_footer .sale-price input[type=checkbox] {
+    position: relative;
+    width: 50px !important;
+    height: 22px !important;
+    -webkit-appearance: none !important;
+    appearance: none;
+    outline: none;
+    border-radius: 30px;
+    background-color: #ccc;
+    cursor: pointer;
+    display: inline-block !important;
+    margin-left: 10px !important;
+    vertical-align: middle;
+}
+
+.dokan_lists_filter_form_footer .sale-price input[type=checkbox]:checked {
+    background-color: #64b450;
+}
+
+.dokan_lists_filter_form_footer .sale-price input[type=checkbox]:before {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    top: 3px;
+    left: 4px;
+    background-color: #fff;
+    transition: .5s;
+}
+
+.dokan_lists_filter_form_footer .sale-price input[type=checkbox]:checked:before {
+    left: 30px;
+}
+
+.dokan-single-seller .store-sale-price {
+    padding: 5px 15px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #F44336;
+    color: #fff;
+}
+
+/**
+* In someone's cart styles
+*/
+.loop-in-someones-cart {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: 1em auto 0;
+    background: rgba(0, 0, 0, .3);
+    color: #fff;
+    width: 80%;
+    padding: 5px;
+    text-align: center;
+    z-index: 100;
+}
+
+.woocommerce-product-gallery .loop-in-someones-cart {
+    top: 0;
+    margin: 0;
+    width: 100%;
+}

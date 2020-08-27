@@ -6,22 +6,18 @@
  defined( 'ABSPATH' ) || exit;
 
  /**
- * Inline style for in someones cart label
+ * Registering plugin main style for frontend
  */
-function dpe_in_someones_cart_style() {
-    wp_add_inline_style( 
-        'dokan-style', 
-        '.loop-in-someones-cart{position:absolute;left:0;right:0;margin:1em auto 0;background:rgba(0,0,0,.3);color:#fff;width: 80%;padding: 5px;text-align: center;z-index: 100;}
-        .woocommerce-product-gallery .loop-in-someones-cart{top:0; margin:0; width:100%; }' 
-    );
+function dpe_main_styles() {
+    wp_register_style( 'dpe-main-style', plugins_url( '/assets/css/main.css', DPE_PLUGIN ), [ 'dokan-style' ] );
 }
-add_action( 'wp_enqueue_scripts', 'dpe_in_someones_cart_style' );
+add_action( 'wp_enqueue_scripts', 'dpe_main_styles' );
 
 
 /**
  * Vendor dashboard styles and scripts
  */
-function dpe_dashboard_media_library_style() {
+function dpe_vendor_dashboard_scripts() {
 
     $page_id = dokan_get_option( 'dashboard', 'dokan_pages' );
 
@@ -29,46 +25,13 @@ function dpe_dashboard_media_library_style() {
         return;
     }
 
-    $css = dpe_dokan_dashboard_css();
     $js  = dpe_dokan_dashboard_js();
 
-    wp_add_inline_style( 'dokan-style', $css );
+    wp_enqueue_style( 'dpe-main-style' );
     wp_add_inline_script( 'dokan-script', $js );
 }
-add_action( 'wp_enqueue_scripts', 'dpe_dashboard_media_library_style' );
+add_action( 'wp_enqueue_scripts', 'dpe_vendor_dashboard_scripts' );
 
-
-/**
- * Vendor dashboard inline css
- */
-function dpe_dokan_dashboard_css() {
-    
-    ob_start();
-    ?>
-    #datepicker_container,
-    #sale_input_container {
-        padding: 20px;
-    }
-    #datepicker_container .ui-datepicker-inline {
-        margin: auto;
-    }
-    #datepicker_container .actions,
-    #sale_input_container .actions {
-        display: flex;
-        margin-top: 20px;
-        justify-content: space-between;
-    }
-    #sale_input {
-        width: 100%;
-        padding: 1em;
-        border: 1px solid #ddd;
-        outline: none !important;
-    }
-    <?php
-    $css = ob_get_clean();
-    
-    return $css;
-}
 
 /**
  * Vendor dashboard inline js
@@ -448,3 +411,36 @@ function dpe_vendor_dashboard_sale_input() {
     <?php
 }
 add_action( 'wp_footer', 'dpe_vendor_dashboard_sale_input' );
+
+
+/**
+ * Store list inline script
+ */
+function dpe_store_list_scripts() {
+
+    if( !dokan_is_store_listing() ) {
+        return;
+    }
+
+    ob_start();
+    ?>
+
+    jQuery(function($){
+        $('#dokan-store-listing-filter-form-wrap').slideDown();
+
+        $('#sale-price').on( 'change', function(e){
+            delete dokan.storeLists.query.sale_price;
+
+            if( $(this).prop('checked') ) {
+                dokan.storeLists.query.sale_price = 'yes';
+            }
+        });
+    });
+
+    <?php
+    $js = ob_get_clean();
+
+    wp_enqueue_style( 'dpe-main-style' );
+    wp_add_inline_script( 'dokan-script', $js );
+}
+add_action( 'wp_enqueue_scripts', 'dpe_store_list_scripts' );

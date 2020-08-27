@@ -355,7 +355,7 @@ function get_unused_shelves() {
  * Override vendor add new product template
  */
 function dpe_vendor_add_product_popup( $template, $slug, $name ) {
-    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit', 'store-lists-filter' );
+    $product_temps = array( 'products/tmpl-add-product-popup', 'products/new-product', 'products/new-product-single', 'products/product-edit', 'store-lists-filter', 'settings/store-form', 'store-lists-loop' );
     $slug          = str_replace( '.php', '', $slug );
 
     if( in_array( $slug, $product_temps ) ) {
@@ -663,3 +663,72 @@ function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
 
 }
 add_action( 'dokan_store_profile_saved', 'dpe_save_vendor_sales_data', 10, 2 );
+
+
+
+/**
+ * Adding sale price query to args
+ */
+function dpe_vendor_list_args( $args, $request ) {
+
+    if( !empty( $request['sale_price'] ) && 'yes' === $request['sale_price'] ) {
+        $args['sale_price'] = 'yes';
+    }
+
+    return $args;
+
+}
+add_filter( 'dokan_seller_listing_args', 'dpe_vendor_list_args', 10, 2 );
+
+
+
+/**
+ * Filtering vendors based on sale_price
+ */
+function dpe_vendor_list_filter( $query ) {
+
+    $sale_price = !empty( $query->query_vars['sale_price'] ) && 'yes' === $query->query_vars['sale_price'] ? true : false;
+    
+    if( $sale_price ) {
+
+        $sale_in = new WP_User_Query( [
+            'role__in'      => [ 'seller', 'administrator' ],
+            'number'        => -1,
+            'orderby'       => 'registered',
+            'order'         => 'ASC',
+            'status'        => 'approved',
+            'fields'        => 'ids',
+            'no_found_rows' => true,
+            'meta_query'    => [
+                'relationship' => 'AND',
+                [
+                    'key'     => 'store_discount_start',
+                    'value'   => date('Y-m-d 00:00:00'),
+                    'compare' => '<=',
+                    'type'    => 'DATE'
+                ],
+                [
+                    'key'     => 'store_discount_end',
+                    'value'   => date('Y-m-d 23:59:59'),
+                    'compare' => '>=',
+                    'type'    => 'DATE'
+                ]
+            ]
+        ]);
+        
+        $sale_not_in = new WP_User_Query( [
+            'role__in'      => [ 'seller', 'administrator' ],
+            'number'        => -1,
+            'orderby'       => 'registered',
+            'order'         => 'ASC',
+            'status'        => 'approved',
+            'fields'        => 'ids',
+            'no_found_rows' => true,
+            'exclude'       => $sale_in->get_results()
+        ]);
+
+        $query->set( 'exclude', $sale_not_in->get_results() );
+    }
+
+}
+add_action( 'pre_get_users', 'dpe_vendor_list_filter' );

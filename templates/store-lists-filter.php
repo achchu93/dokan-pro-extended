@@ -59,7 +59,7 @@ defined( 'ABSPATH' ) || exit; ?>
 
 <?php do_action( 'dokan_before_store_lists_filter_form', $stores ); ?>
 
-<form role="store-list-filter" name="dokan_store_lists_filter_form" id="dokan-store-listing-filter-form-wrap">
+<form role="store-list-filter" name="dokan_store_lists_filter_form" id="dokan-store-listing-filter-form-wrap" style="display: none">
 
     <?php
         do_action( 'dokan_before_store_lists_filter_search', $stores );
@@ -73,9 +73,17 @@ defined( 'ABSPATH' ) || exit; ?>
         do_action( 'dokan_before_store_lists_filter_apply_button', $stores );
     ?>
 
-    <div class="apply-filter">
-        <button id="cancel-filter-btn" class="dokan-btn dokan-btn-theme"><?php esc_html_e( 'Cancel', 'dokan-lite' ); ?></button>
-        <button id="apply-filter-btn" class="dokan-btn dokan-btn-theme" type="submit"><?php esc_html_e( 'Apply', 'dokan-lite' ); ?></button>
+    <div class="dokan_lists_filter_form_footer">
+        <div class="sale-price item">
+            <label for="sale-price">
+                All stores with sale price:
+            </label>
+            <input type="checkbox" class="dokan-toogle-checkbox" id="sale-price" name="sale_price">
+        </div>
+        <div class="apply-filter">
+            <button id="cancel-filter-btn" class="dokan-btn dokan-btn-theme"><?php esc_html_e( 'Cancel', 'dokan-lite' ); ?></button>
+            <button id="apply-filter-btn" class="dokan-btn dokan-btn-theme" type="submit"><?php esc_html_e( 'Apply', 'dokan-lite' ); ?></button>
+        </div>
     </div>
 
     <?php do_action( 'dokan_after_store_lists_filter_apply_button', $stores ); ?>
