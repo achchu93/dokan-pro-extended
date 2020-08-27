@@ -628,7 +628,7 @@ function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
             foreach( $product->get_children_() as $variation ) {
 
                 if( $rate ){
-                    $sale_price = $variation->get_price() - ( $variation->get_price() * ( $rate / 100 ) ); 
+                    $sale_price = $variation->get_regular_price() - ( $variation->get_regular_price() * ( $rate / 100 ) ); 
                 }
                 $errors = $variation->set_props(
                     array(
@@ -646,7 +646,7 @@ function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
         }
 
         if( $rate ){
-            $sale_price = $product->get_price() - ( $product->get_price() * ( $rate / 100 ) ); 
+            $sale_price = $product->get_regular_price() - ( $product->get_regular_price() * ( $rate / 100 ) );
         }
         $errors = $product->set_props(
             array(
