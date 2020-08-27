@@ -143,6 +143,17 @@ do_action( 'dokan_dashboard_wrap_before', $post, $post_id );
                     </div>
                 <?php } ?>
 
+                <?php if ( !empty( $_GET['new'] ) ) { ?>
+                    <div class="dokan-message">
+                        <button type="button" class="dokan-close" data-dismiss="alert">&times;</button>
+                        <strong><?php echo sprintf( 'Your new product added successfully. Product ID is: %d', $post_id ) ?></strong>
+
+                        <?php if ( $post->post_status == 'publish' ) { ?>
+                            <a href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" target="_blank"><?php esc_html_e( 'View Product &rarr;', 'dokan-lite' ); ?></a>
+                        <?php } ?>
+                    </div>
+                <?php } ?>
+
                 <?php
                 $can_sell = apply_filters( 'dokan_can_post', true );
 

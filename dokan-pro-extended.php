@@ -732,3 +732,26 @@ function dpe_vendor_list_filter( $query ) {
 
 }
 add_action( 'pre_get_users', 'dpe_vendor_list_filter' );
+
+
+/**
+ * Filter url to identify the newly added product
+ */
+function dpe_newly_added_product_msg( $url, $product_id ) {
+    return add_query_arg( 'new', $product_id, $url );
+}
+add_filter( 'dokan_add_new_product_redirect', 'dpe_newly_added_product_msg' );
+
+
+function dpe_listing_product_new_product_msg() {
+
+    if ( !empty( $_GET['new'] ) ) { ?>
+        <div class="dokan-message">
+            <button type="button" class="dokan-close" data-dismiss="alert">&times;</button>
+            <strong><?php echo sprintf( 'Your new product added successfully. Product ID is: %d', intval($_GET['new']) ) ?></strong>
+        </div>
+    <?php
+    }
+
+}
+add_action( 'dokan_before_listing_product', 'dpe_listing_product_new_product_msg' );
