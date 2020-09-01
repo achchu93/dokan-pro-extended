@@ -129,7 +129,7 @@ function dpe_validate_subscription_start_date( $error ) {
 
     return $error;
 }
-add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
+//add_filter( 'woocommerce_registration_errors', 'dpe_validate_subscription_start_date' );
 
 
 /**
