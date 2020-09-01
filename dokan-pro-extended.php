@@ -716,6 +716,23 @@ function dpe_vendor_list_filter( $query ) {
             ]
         ]);
         
+        $excludes = $sale_in->get_results();
+
+        foreach( $excludes as $key => $vendor_id ) {
+            $vendor = dokan()->vendor->get($vendor_id);
+            if( is_null( $vendor->subscription ) || !$vendor->subscription ){
+                unset($excludes[$key]);
+                continue;
+            }
+
+            if( 
+                !$vendor->subscription->check_pack_validity_for_vendor( $vendor->subscription->get_id() )
+                || !$vendor->subscription->get_published_product_count() 
+            ){
+                unset($excludes[$key]);
+            }
+        }
+        
         $sale_not_in = new WP_User_Query( [
             'role__in'      => [ 'seller', 'administrator' ],
             'number'        => -1,
@@ -724,7 +741,7 @@ function dpe_vendor_list_filter( $query ) {
             'status'        => 'approved',
             'fields'        => 'ids',
             'no_found_rows' => true,
-            'exclude'       => $sale_in->get_results()
+            'exclude'       => $excludes
         ]);
 
         $query->set( 'exclude', $sale_not_in->get_results() );
