@@ -687,64 +687,61 @@ add_filter( 'dokan_seller_listing_args', 'dpe_vendor_list_args', 10, 2 );
  */
 function dpe_vendor_list_filter( $query ) {
 
-    $sale_price = !empty( $query->query_vars['sale_price'] ) && 'yes' === $query->query_vars['sale_price'] ? true : false;
+    global $wpdb;
+
+    $exclude    = []; 
+
+    // query to exclude vendors who has no products
+    $n_query = "SELECT users.ID FROM {$wpdb->users} users
+        LEFT JOIN {$wpdb->posts} posts ON posts.post_author = users.ID and posts.post_type = 'product' and posts.post_status = 'publish'
+        WHERE posts.ID IS NULL and 1=1
+        GROUP BY users.ID";
     
+    $no_product         = $wpdb->get_results(
+        $n_query,
+        ARRAY_A
+    );
+    $no_product_vendors = wp_list_pluck( $no_product, 'ID' );
+    if( count( $no_product_vendors ) ){
+        $exclude = array_merge( $exclude, $no_product_vendors );
+    }
+
+
+    $sale_price = !empty( $query->query_vars['sale_price'] ) && 'yes' === $query->query_vars['sale_price'] ? true : false;
     if( $sale_price ) {
 
-        $sale_in = new WP_User_Query( [
-            'role__in'      => [ 'seller', 'administrator' ],
-            'number'        => -1,
-            'orderby'       => 'registered',
-            'order'         => 'ASC',
-            'status'        => 'approved',
-            'fields'        => 'ids',
-            'no_found_rows' => true,
-            'meta_query'    => [
-                'relationship' => 'AND',
-                [
-                    'key'     => 'store_discount_start',
-                    'value'   => date('Y-m-d 00:00:00'),
-                    'compare' => '<=',
-                    'type'    => 'DATE'
-                ],
-                [
-                    'key'     => 'store_discount_end',
-                    'value'   => date('Y-m-d 23:59:59'),
-                    'compare' => '>=',
-                    'type'    => 'DATE'
-                ]
-            ]
-        ]);
-        
-        $excludes = $sale_in->get_results();
+        // query to exclude vendors who has no active sales
+        $n_query = "SELECT users.ID FROM {$wpdb->users} users 
+            JOIN {$wpdb->usermeta} usermeta ON usermeta.user_id = users.id
+            LEFT JOIN {$wpdb->usermeta} usermeta1 ON usermeta1.user_id = users.id and usermeta1.meta_key = 'store_discount_start'
+            LEFT JOIN {$wpdb->usermeta} usermeta2 ON usermeta2.user_id = users.id and usermeta2.meta_key = 'store_discount_end'
+            WHERE ( usermeta.meta_key = 'wp_capabilities' and ( usermeta.meta_value LIKE %s or usermeta.meta_value LIKE %s ) )
+                and
+                (
+                    ( usermeta1.meta_value IS NULL or CAST(usermeta1.meta_value AS DATE) >= %s )
+                    or
+                    ( usermeta2.meta_value IS NULL or CAST(usermeta2.meta_value AS DATE) <= %s )
+                )
+                and
+                1=1";
+                
+        $no_sale = $wpdb->get_results(
+            $wpdb->prepare(
+                $n_query, 
+                [ '%seller%', '%administrator%', date('Y-m-d 00:00:00'), date('Y-m-d 23:59:59') ]
+            ),
+            ARRAY_A
+        );
 
-        foreach( $excludes as $key => $vendor_id ) {
-            $vendor = dokan()->vendor->get($vendor_id);
-            if( is_null( $vendor->subscription ) || !$vendor->subscription ){
-                unset($excludes[$key]);
-                continue;
-            }
-
-            if( 
-                !$vendor->subscription->check_pack_validity_for_vendor( $vendor->subscription->get_id() )
-                || !$vendor->subscription->get_published_product_count() 
-            ){
-                unset($excludes[$key]);
-            }
+        $no_sale_vendors = wp_list_pluck( $no_sale, 'ID' );
+        if( count($no_sale_vendors) ){
+            $exclude = array_merge( $exclude, $no_sale_vendors );
         }
-        
-        $sale_not_in = new WP_User_Query( [
-            'role__in'      => [ 'seller', 'administrator' ],
-            'number'        => -1,
-            'orderby'       => 'registered',
-            'order'         => 'ASC',
-            'status'        => 'approved',
-            'fields'        => 'ids',
-            'no_found_rows' => true,
-            'exclude'       => $excludes
-        ]);
 
-        $query->set( 'exclude', $sale_not_in->get_results() );
+    }
+
+    if( !empty( $exclude ) ) {
+        $query->set( 'exclude', $exclude );
     }
 
 }
