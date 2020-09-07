@@ -814,6 +814,17 @@ function dpe_modify_subscription_default_message(){
                 return printf( '<p class="dokan-info">%s</p>', __( 'You can add unlimited products', 'dokan' ) );
             }
 
+            $subscription_pack     = DokanPro\Modules\Subscription\Helper::get_subscription_pack_id();
+            $is_valid_subscription = DokanPro\Modules\Subscription\Helper::is_vendor_subscribed_pack( $subscription_pack );
+            if( !$subscription_pack || !$is_valid_subscription ){
+                echo sprintf( 
+                        '<p class="dokan-info">%s</p>',
+                        __( 'Sorry! Your subscription is ended. You can not add or publish any more product. Please update your package.', 'dokan' )
+                );
+                echo "<style>.dokan-add-product-link{display : none !important}</style>";
+                return;
+            }
+
             if ( $remaining_product == 0 || ! $module::can_post_product() ) {
 
                 if( $module::is_dokan_plugin() ) {
@@ -822,7 +833,7 @@ function dpe_modify_subscription_default_message(){
                     $page_id   = dokan_get_option( 'subscription_pack', 'dokan_product_subscription' );
                     $permalink = get_permalink( $page_id );
                 }
-                $info = __( 'Sorry! Your subscription is ended. You can not add or publish any more product. Please update your package.', 'dokan' );
+                $info = __( 'Sorry! You are out of products. To add more products please chose a new subscription.', 'dokan' );
                 echo "<p class='dokan-info'>" . $info . "</p>";
                 echo "<style>.dokan-add-product-link{display : none !important}</style>";
             } else {
