@@ -220,7 +220,8 @@ function dpe_in_someones_cart_to_loop() {
     
 
     if( intval( $carts ) > 0 ) {
-        echo '<div class="loop-in-someones-cart">This product is in another cart</div>';
+         $in_other_cart_translation = __('This product is in another cart','Dokan');
+        echo '<div class="loop-in-someones-cart">'.$in_other_cart_translation . '</div>';
     }
 
 }
@@ -684,7 +685,7 @@ add_filter( 'dokan_seller_listing_args', 'dpe_vendor_list_args', 10, 2 );
 
 /**
  * Filtering vendors based on sale_price
- */
+ 
 function dpe_vendor_list_filter( $query ) {
 
     global $wpdb;
@@ -747,6 +748,9 @@ function dpe_vendor_list_filter( $query ) {
 }
 add_action( 'pre_get_users', 'dpe_vendor_list_filter' );
 
+*/
+
+
 
 /**
  * Filter url to identify the newly added product
@@ -778,3 +782,9 @@ function dpe_widgets_registration(){
 
 }
 add_action( 'widgets_init', 'dpe_widgets_registration', 11 );
+
+
+
+
+
+//kinjal - update product limit message
