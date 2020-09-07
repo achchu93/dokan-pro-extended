@@ -785,6 +785,51 @@ add_action( 'widgets_init', 'dpe_widgets_registration', 11 );
 
 
 
+/**
+ * Modify vendor dashboard subscription messages
+ *  - removing default dokan hook
+ *  - adding custom hook
+ */
+function dpe_modify_subscription_default_message(){
 
+    $module = dokan_pro()->module->product_subscription;
 
-//kinjal - update product limit message
+    if( !$module ){
+        return;
+    }
+
+    // remove default message hook
+    remove_action( 'dokan_before_listing_product', [ $module, 'show_custom_subscription_info' ] );
+
+    // add new hook to override messages
+    add_action( 'dokan_before_listing_product', function()use($module){
+
+        $vendor_id = dokan_get_current_user_id();
+
+        if ( dokan_is_seller_enabled( $vendor_id ) ) {
+
+            $remaining_product = DokanPro\Modules\Subscription\Helper::get_vendor_remaining_products( $vendor_id );
+
+            if ( '-1' === $remaining_product ) {
+                return printf( '<p class="dokan-info">%s</p>', __( 'You can add unlimited products', 'dokan' ) );
+            }
+
+            if ( $remaining_product == 0 || ! $module::can_post_product() ) {
+
+                if( $module::is_dokan_plugin() ) {
+                    $permalink = dokan_get_navigation_url( 'subscription' );
+                } else {
+                    $page_id   = dokan_get_option( 'subscription_pack', 'dokan_product_subscription' );
+                    $permalink = get_permalink( $page_id );
+                }
+                $info = sprintf( __( 'Sorry! You can not add or publish any more product. Please <a href="%s">update your package</a>.', 'dokan' ), $permalink );
+                echo "<p class='dokan-info'>" . $info . "</p>";
+                echo "<style>.dokan-add-product-link{display : none !important}</style>";
+            } else {
+                echo "<p class='dokan-info'>". sprintf( __( 'You can add %d more product(s). 1', 'dokan' ), $remaining_product ) . "</p>";
+            }
+        }
+
+    });
+}
+add_action( 'dokan_loaded', 'dpe_modify_subscription_default_message', 11 );
