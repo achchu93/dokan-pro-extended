@@ -822,7 +822,7 @@ function dpe_modify_subscription_default_message(){
                     $page_id   = dokan_get_option( 'subscription_pack', 'dokan_product_subscription' );
                     $permalink = get_permalink( $page_id );
                 }
-                $info = sprintf( __( 'Sorry! You can not add or publish any more product. Please <a href="%s">update your package</a>.', 'dokan' ), $permalink );
+                $info = __( 'Sorry! Your subscription is ended. You can not add or publish any more product. Please update your package.', 'dokan' );
                 echo "<p class='dokan-info'>" . $info . "</p>";
                 echo "<style>.dokan-add-product-link{display : none !important}</style>";
             } else {
