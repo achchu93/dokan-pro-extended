@@ -63,13 +63,9 @@ function dpe_dokan_dashboard_js() {
                 }
                 if( parseInt( parentCat ) < 1 ) {
                     return;
-                }
-                /*if( $( '#dokan-add-new-product-form .product_cat' ).length > 3 ) {
-                    return;
-                }*/ 
+                } 
 
-                var wrapperEl = parentCatEl.parents('.product-full-container');
-                wrapperEl.block({message:null});
+                $.blockUI({message:null});
 
                 $.ajax({
                     url: dokan.ajaxurl,
@@ -89,7 +85,7 @@ function dpe_dokan_dashboard_js() {
                         catWrapper.find('.product_cat').select2();
                     }
                 }).always( function() {
-                    wrapperEl.unblock();
+                    $.unblockUI();
                 });
             }
         } );
