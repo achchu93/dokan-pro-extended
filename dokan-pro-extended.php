@@ -844,3 +844,30 @@ function dpe_modify_subscription_default_message(){
     });
 }
 add_action( 'dokan_loaded', 'dpe_modify_subscription_default_message', 11 );
+
+
+function dpe_wc_templates( $template, $template_name, $template_path ) {
+
+    $_template = $template;
+
+    if ( ! $template_path ) {
+        $template_path = WC()->template_path();
+    }
+
+    $plugin_path  = dirname( __FILE__ ) . '/templates/';
+
+    // Modification: Get the template from this plugin, if it exists
+    if ( file_exists( $plugin_path . $template_name ) ) {
+        $template = $plugin_path . $template_name;
+    }
+
+    // Use default template
+    if ( ! $template ) {
+        $template = $_template;
+    }
+
+    // Return what we found
+    return $template;
+
+}
+add_filter( 'woocommerce_locate_template', 'dpe_wc_templates', 99, 3 );
