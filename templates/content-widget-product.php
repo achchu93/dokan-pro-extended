@@ -16,37 +16,54 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
 global $product;
 
 if ( ! is_a( $product, 'WC_Product' ) ) {
-	return;
+    return;
 }
 
 ?>
 <li>
-	<?php do_action( 'woocommerce_widget_product_item_start', $args ); ?>
-	<a href="<?php echo esc_url( $product->get_permalink() ); ?>">
-		<?php echo wp_kses_post($product->get_image( 'shop_catalog' )); ?>
-		<span class="product-title"><?php echo wp_kses_post($product->get_name()); ?></span>
-	</a>
-	<?php if ( ! empty( $show_rating ) ) : ?>
-		<?php echo wp_kses_post( wc_get_rating_html( $product->get_average_rating() ) ); ?>
-	<?php endif; ?>
-	<span class="price">
-		<?php echo wp_kses_post($product->get_price_html()); ?>
-	</span>
-	<?php if( get_field('color') || get_field('size') ): ?>
-	<div class="custom-fields-widget">
-		<?php if( get_field('color') ): ?>
-		<strong>Color:</strong><?php the_field('color'); ?>
-		<?php endif; ?>
-		<?php if( get_field('size') ): ?>
-		<strong>Size:</strong><?php the_field('size'); ?>
-		<?php endif; ?>
-	</div>
-	<?php endif; ?>
-	<?php do_action( 'woocommerce_widget_product_item_end', $args ); ?>
+    <?php do_action( 'woocommerce_widget_product_item_start', $args ); ?>
+    <a href="<?php echo esc_url( $product->get_permalink() ); ?>">
+        <?php echo wp_kses_post($product->get_image( 'shop_catalog' )); ?>
+        <span class="product-title"><?php echo wp_kses_post($product->get_name()); ?></span>
+    </a>
+    <?php if ( ! empty( $show_rating ) ) : ?>
+        <?php echo wp_kses_post( wc_get_rating_html( $product->get_average_rating() ) ); ?>
+    <?php endif; ?>
+    <span class="price">
+        <?php echo wp_kses_post($product->get_price_html()); ?>
+    </span>
+
+    <div class="custom-fields-widget">
+
+
+<?php if( get_field('staerd_born') ): ?>
+    <strong>Stærð:</strong><?php the_field('staerd_born'); ?><?php endif; ?>
+
+
+
+<?php if( get_field('skostaerd') ): ?>
+    <strong>Skóstærð:</strong><?php the_field('skostaerd'); ?><?php endif; ?>
+
+
+
+<?php if( get_field('staerd_fullordnir') ): ?>
+    <strong>Stærð:</strong><?php the_field('staerd_fullordnir'); ?><?php endif; ?>
+
+
+
+<?php if( get_field('staerð_buxur') ): ?>
+    <strong>Stærð:</strong><?php the_field('staerð_buxur'); ?><?php endif; ?>
+
+
+
+
+    </div>
+
+    <?php do_action( 'woocommerce_widget_product_item_end', $args ); ?>
 </li>
