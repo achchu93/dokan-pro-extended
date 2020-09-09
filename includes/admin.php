@@ -10,11 +10,17 @@
 function dpe_vendor_custom_product_id( $user ) {
     global $wpdb;
 
-    $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and user_id != $user->ID and 1=1" );
+    $query    =  $wpdb->prepare( 
+        "SELECT um1.meta_value from {$wpdb->usermeta} um
+        JOIN {$wpdb->usermeta} um1 on um1.user_id = um.user_id and um1.meta_key = 'vendor_custom_product_id'
+        WHERE um.meta_key = 'product_pack_enddate' and CAST(um.meta_value AS DATETIME) > %s and um.user_id != $user->ID and 1=1",
+        array( date('Y-m-d H:i:s') )
+    );
+    $occupied = $wpdb->get_col( $query );
     $occupied = array_map( function( $value ){
         return (array) $value;
     }, array_map( 'maybe_unserialize', $occupied ) );
-    $occupied = call_user_func_array( 'array_merge', $occupied );
+    $occupied = count( $occupied ) ? call_user_func_array( 'array_merge', $occupied ) : [];
 
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
     

@@ -321,7 +321,8 @@ add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
  * Assign available vendor shelf for vendor
  */
 function dpe_update_vendor_shelf ( $user_id, $settings ) {
-    $terms = get_unused_shelves();
+    $date  = date( 'Y-m-d H:i:s', strtotime( get_user_meta( $user_id, 'product_pack_enddate', true ) ) );
+    $terms = get_unused_shelves( $date );
 
     if( is_array( $terms ) && count( $terms ) ) {
         $term = current( $terms );
@@ -331,14 +332,24 @@ function dpe_update_vendor_shelf ( $user_id, $settings ) {
 add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
 
 
-function get_unused_shelves() {
+function get_unused_shelves( $date = '' ) {
     global $wpdb;
 
-    $occupied = $wpdb->get_col( "SELECT meta_value from {$wpdb->usermeta} WHERE meta_key = 'vendor_custom_product_id' and 1=1" );
+    if( !$date ) {
+        $date = date( 'Y-m-d H:i:s' );
+    }
+
+    $query    =  $wpdb->prepare( 
+        "SELECT um1.meta_value from {$wpdb->usermeta} um
+        JOIN {$wpdb->usermeta} um1 on um1.user_id = um.user_id and um1.meta_key = 'vendor_custom_product_id'
+        WHERE um.meta_key = 'product_pack_enddate' and CAST(um.meta_value AS DATETIME) > %s and 1=1",
+        array( $date )
+    );
+    $occupied = $wpdb->get_col( $query );
     $occupied = array_map( function( $value ){
         return (array) $value;
     }, array_map( 'maybe_unserialize', $occupied ) );
-    $occupied = call_user_func_array( 'array_merge', $occupied );
+    $occupied = count($occupied) ? call_user_func_array( 'array_merge', $occupied ) : [];
 
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
     
@@ -393,7 +404,7 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
     while( $l_date <= $end->format('Y-m-d') ) {
 
         $key          = strtotime( $l_date );
-        $shelves_left = get_unused_shelves();
+        $shelves_left = get_unused_shelves( $l_date );
 
         if( count( $shelves_left ) ) {
             foreach( $dates as $date ) {
