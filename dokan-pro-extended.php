@@ -882,3 +882,61 @@ function dpe_wc_templates( $template, $template_name, $template_path ) {
 
 }
 add_filter( 'woocommerce_locate_template', 'dpe_wc_templates', 99, 3 );
+
+/**
+ * override vendor product listing template
+ * and add woof ajax wrapper
+ * 
+ */
+function dpe_vendor_product_list_template(){
+
+    $template = plugin_dir_path( DPE_PLUGIN ) . '/templates/vendor-store-products.php';
+
+    return $template;
+}
+add_filter( 'dokan_elementor_store_tab_content_template', 'dpe_vendor_product_list_template',99, 1  );
+
+
+/**
+ * set vendor id to woof filter query
+ * so it would load only current vendor product
+ * 
+ */
+function dpe_vendor_filter_query( $query ){
+    global $WOOF;
+
+    if( !empty( $_REQUEST['shortcode'] ) ) {
+        
+        $shortcode     = $_REQUEST['shortcode'];
+        $vendor_string = strpos( $shortcode, 'vendor_id' );
+
+        if( false !== $vendor_string ){
+            $vendor = substr( $shortcode, $vendor_string );
+            $texts  = explode( '=', $vendor );
+            
+            if( !empty( $texts[1] ) && $id = intval( $texts[1] ) ) {
+                $query['author'] = $id;
+            }
+        }
+    }
+
+    return $query;
+}
+add_filter( 'woof_products_query', 'dpe_vendor_filter_query' );
+
+
+/**
+ * with woof filters vendors page visible as archive
+ * we check and redirect them
+ * 
+ */
+function dpe_redirect_vendors_with_filter(){
+    global $wp_query;
+    
+    if( dokan_is_store_page() && is_archive() ) {
+        $author_id = get_query_var( 'author' );
+        wp_safe_redirect( dokan()->vendor->get( $author_id )->get_shop_url() );
+        die();
+    }
+}
+add_action( 'template_redirect', 'dpe_redirect_vendors_with_filter' );
