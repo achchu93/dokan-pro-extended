@@ -408,10 +408,11 @@ add_filter( 'dokan_locate_template', 'dpe_vendor_add_product_popup', 10, 3 );
 /**
  * Helper to get restricted dates in a month
  */
-function dpe_get_restrcited_days_for_month( $year, $month ) {
+function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
 
     $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
     $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
+    $pack  = !is_null( $pack_id ) ? new DokanPro\Modules\Subscription\SubscriptionPack($pack_id) : false;
 
     $option_key    = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
     $days          = get_option( $option_key, array() );
@@ -420,6 +421,7 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
     $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $end->format('Y-m-d') );
     $l_date  = $start->format('Y-m-d');
     $s_count = array();
+    $left    = array();
 
     while( $l_date <= $end->format('Y-m-d') ) {
 
@@ -439,9 +441,24 @@ function dpe_get_restrcited_days_for_month( $year, $month ) {
 
         if( !count( $shelves_left ) || isset( $days[$key], $s_count[$key] ) && intval( $days[$key] ) <= $s_count[$key] ) {
             $results[] = date( 'Y-m-d', intval( $key ) );
+        }else{
+            $left[]    = date( 'Y-m-d', intval( $key ) );
         }
 
         $l_date  = date( 'Y-m-d', strtotime( '+1 day', strtotime( $l_date ) ) );
+    }
+
+    if( $pack ) {
+
+        $l_results = array();
+        foreach( $left as $l_date ) {
+            $pack_end = date( 'Y-m-d', strtotime( "+{$pack->get_pack_valid_days()} day", strtotime( $l_date ) ) );
+            if( in_array( $pack_end, $results ) || end( $results ) < $pack_end ) {
+                $l_results[] = $l_date;
+            }
+        }
+
+        $results = array_merge( $l_results, $results );
     }
 
     return $results;

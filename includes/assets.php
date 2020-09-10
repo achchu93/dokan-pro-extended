@@ -63,7 +63,7 @@ function dpe_dokan_dashboard_js() {
                 }
                 if( parseInt( parentCat ) < 1 ) {
                     return;
-                } 
+                }
 
                 $.blockUI({message:null});
 
@@ -76,7 +76,7 @@ function dpe_dokan_dashboard_js() {
                 }).then( function( response ) {
                     if( response.success ) {
                         var catWrapper = $(response.data);
-                        
+
                         if( catWrapper.find('.product_cat option').length < 2 ) {
                             return;
                         }
@@ -128,7 +128,7 @@ function dpe_dokan_dashboard_js() {
                 if( all_days.some(r=> restrictedDaysOnly.indexOf(r) >= 0) ){ //true if any of all_days date is in restrictedDays array
 
                     var conflict_first_date = all_days.filter(function(item){ return restrictedDaysOnly.indexOf(item) > -1});
-                    
+
                     var this_date_human = this_date.toLocaleDateString();
                     var next_date_human = new Date(next_date); next_date_human = next_date_human.toLocaleDateString();
                     var conflict_first_date_human = new Date(conflict_first_date[0]); conflict_first_date_human = conflict_first_date_human.toLocaleDateString();
@@ -158,20 +158,29 @@ function dpe_dokan_dashboard_js() {
             }
         });
 
-        restrictDays(
-            $.datepicker.formatDate('yy', picker.datepicker('getDate')), 
-            $.datepicker.formatDate('mm', picker.datepicker('getDate'))
-        )
-
         $('.product_pack_item').not('.current_pack').find('.buy_product_pack').on( 'click', function( e ) {
             if( !chosenPack || !chosen ){
                 e.preventDefault();
                 chosenPack = $(this);
+
+                var url = new URL($(this).get(0).href);
+                var pack_id = url.searchParams.get('add-to-cart');
+
                 $.blockUI(
-                    { 
-                        message: $('#datepicker_container'), 
-                        css: { width: '400px' } 
+                    {
+                        message: $('#datepicker_container'),
+                        css: { width: '400px' }
                     }
+                );
+
+                if( !picker.datepicker('getDate') ){
+                    picker.datepicker('setDate', '+3d');
+                }
+
+                restrictDays(
+                    $.datepicker.formatDate('yy', picker.datepicker('getDate')),
+                    $.datepicker.formatDate('mm', picker.datepicker('getDate')),
+                    pack_id
                 );
             }else{
                 window.location.href = $(this).attr('href');
@@ -214,9 +223,9 @@ function dpe_dokan_dashboard_js() {
             if( $('#bulk-product-action-selector').val() === 'sale' && !$('#sale_value').length ){
                 e.preventDefault();
                 $.blockUI(
-                    { 
-                        message: $('#sale_input_container'), 
-                        css: { width: '350px' } 
+                    {
+                        message: $('#sale_input_container'),
+                        css: { width: '350px' }
                     }
                 );
             }
@@ -264,12 +273,11 @@ function dpe_dokan_dashboard_js() {
             });
         });
 
-        function restrictDays(year, month){
-
+        function restrictDays(year, month, pack_id){
 
             restrictedDays = {}; // resetting for now to avoid confusion, can use it later to optimize performance
 
-            var blockDiv  = $('.ui-datepicker-inline');  
+            var blockDiv  = $('.ui-datepicker-inline');
             var formatted = String(month).padStart(2, "0");
 
             if( restrictedDays[formatted] ){
@@ -286,7 +294,8 @@ function dpe_dokan_dashboard_js() {
                 data: {
                     action: 'dpe_get_restrcited_days_for_month',
                     year: year,
-                    month : month
+                    month : month,
+                    pack_id: pack_id
                 }
             }).then(function(response){
                 restrictedDays[formatted] = response.data;
@@ -299,7 +308,7 @@ function dpe_dokan_dashboard_js() {
     });
     <?php
     $js = ob_get_clean();
-    
+
     return $js;
 }
 
@@ -322,17 +331,17 @@ function dpe_admin_assets() {
         return;
     }
 
-    wp_enqueue_script( 
-        'full-calendar-js', 
-        'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.js', 
-        array(), 
+    wp_enqueue_script(
+        'full-calendar-js',
+        'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.js',
+        array(),
         true
     );
 
-    wp_enqueue_script( 
-        'moment-js', 
-        'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js', 
-        array(), 
+    wp_enqueue_script(
+        'moment-js',
+        'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js',
+        array(),
         true
     );
 
@@ -343,18 +352,18 @@ function dpe_admin_assets() {
         true
     );
 
-    wp_enqueue_style( 
-        'full-calendar-css', 
+    wp_enqueue_style(
+        'full-calendar-css',
         'https://cdn.jsdelivr.net/npm/fullcalendar@5.1.0/main.min.css'
     );
 
-    wp_enqueue_style( 
-        'jquery-ui-datepicker', 
-        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' 
+    wp_enqueue_style(
+        'jquery-ui-datepicker',
+        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
     );
 
-    wp_enqueue_style( 
-        'dpe-admin-css', 
+    wp_enqueue_style(
+        'dpe-admin-css',
         plugins_url( '/assets/css/admin.css', DPE_PLUGIN )
     );
 }
@@ -365,15 +374,15 @@ function dpe_registration_scripts() {
         return;
     }
 
-    wp_enqueue_style( 
-        'jquery-ui-datepicker', 
-        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' 
+    wp_enqueue_style(
+        'jquery-ui-datepicker',
+        'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
     );
-    wp_enqueue_script( 
-        'dpe-frontend-js', 
-        plugins_url( 'assets/js/frontend.js', DPE_PLUGIN ), 
-        array( 'jquery', 'jquery-ui-datepicker' ), 
-        true 
+    wp_enqueue_script(
+        'dpe-frontend-js',
+        plugins_url( 'assets/js/frontend.js', DPE_PLUGIN ),
+        array( 'jquery', 'jquery-ui-datepicker' ),
+        true
     );
 }
 add_action( 'wp_enqueue_scripts', 'dpe_registration_scripts', 99 );
@@ -381,14 +390,14 @@ add_action( 'wp_enqueue_scripts', 'dpe_registration_scripts', 99 );
 
 function dpe_vendor_dashboard_picker() {
     ?>
-    <div id="datepicker_container" style="display:none; cursor: default"> 
+    <div id="datepicker_container" style="display:none; cursor: default">
         <p>Please choose a subscription start date. Default will be current date.</p>
         <div id="datepicker"></div>
         <div class="actions">
             <button id="cancel-picker" class="button">Cancel</button>
             <button id="submit-picker" class="button" disabled>Submit</button>
         </div>
-    </div> 
+    </div>
     <?php
 }
 add_action( 'wp_footer', 'dpe_vendor_dashboard_picker' );
@@ -396,14 +405,14 @@ add_action( 'wp_footer', 'dpe_vendor_dashboard_picker' );
 
 function dpe_vendor_dashboard_sale_input() {
     ?>
-    <div id="sale_input_container" style="display:none; cursor: default"> 
+    <div id="sale_input_container" style="display:none; cursor: default">
         <p>Please input a sale percentage to be applied for products.</p>
         <input type="number" id="sale_input">
         <div class="actions">
             <button id="cancel-sale" class="button">Cancel</button>
             <button id="submit-sale" class="button" disabled>Submit</button>
         </div>
-    </div> 
+    </div>
     <?php
 }
 add_action( 'wp_footer', 'dpe_vendor_dashboard_sale_input' );

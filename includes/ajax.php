@@ -134,8 +134,9 @@ function dpe_restricted_days_for_month() {
 
     $year  = $_POST['year'];
     $month = $_POST['month'];
+    $pack  = $_POST['pack_id'];
 
-    wp_send_json_success( dpe_get_restrcited_days_for_month( $year, $month ) );
+    wp_send_json_success( dpe_get_restrcited_days_for_month( $year, $month, $pack ) );
 }
 add_action( 'wp_ajax_dpe_get_restrcited_days_for_month', 'dpe_restricted_days_for_month' );
 add_action( 'wp_ajax_nopriv_dpe_get_restrcited_days_for_month', 'dpe_restricted_days_for_month' );
