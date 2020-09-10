@@ -131,7 +131,7 @@ add_action( 'wp_ajax_dpe_sub_filled_count', 'dpe_sub_filled_count' );
  * Ajax handler for frontend restrcited days
  */
 function dpe_restricted_days_for_month() {
-    
+
     $year  = $_POST['year'];
     $month = $_POST['month'];
 
@@ -157,7 +157,7 @@ function dpe_get_child_category_el() {
                 'show_option_none' => __( '- Select a category -', 'dokan-lite' ),
                 'hierarchical'     => 0,
                 'hide_empty'       => 0,
-                'name'             => 'product_cat',
+                'name'             => 'product_cat_'.$parent_cat,
                 'id'               => 'product_cat_'.$parent_cat,
                 'taxonomy'         => 'product_cat',
                 'title_li'         => '',
@@ -179,7 +179,7 @@ function dpe_get_child_category_el() {
                 'show_option_none' => __( '', 'dokan-lite' ),
                 'hierarchical'     => 0,
                 'hide_empty'       => 0,
-                'name'             => 'product_cat[]',
+                'name'             => 'product_cat_'.$parent_cat.'[]',
                 'id'               => 'product_cat_'.$parent_cat,
                 'taxonomy'         => 'product_cat',
                 'title_li'         => '',
@@ -197,7 +197,7 @@ function dpe_get_child_category_el() {
     <?php endif;
 
     $response = ob_get_clean();
-    
+
     wp_send_json_success( $response );
 }
 add_action( 'wp_ajax_dpe_get_child_category_el', 'dpe_get_child_category_el' );
@@ -206,12 +206,12 @@ add_action( 'wp_ajax_no_priv_dpe_get_child_category_el', 'dpe_get_child_category
 
 function dpe_ajax_save_subscription_start_date() {
 
-	update_user_meta( 
-		get_current_user_id(), 
-		'dokan_subscription_start_date', 
+	update_user_meta(
+		get_current_user_id(),
+		'dokan_subscription_start_date',
 		date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
     );
-    
+
     wp_send_json_success( true );
 }
 add_action( 'wp_ajax_dpe_save_subscription_start_date', 'dpe_ajax_save_subscription_start_date' );

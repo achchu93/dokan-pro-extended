@@ -1,11 +1,11 @@
 <?php
 /**
   Plugin Name: Dokan Pro Extended
-  Plugin URI: 
+  Plugin URI:
   Description: An extension to customize Dokan Pro Plugin
   Version: 0.0.1
   Author: Faisal Akram
-  Author URI: 
+  Author URI:
  */
 
 use WeDevs\Dokan\Walkers\TaxonomyDropdown;
@@ -48,11 +48,11 @@ function dpe_subscription_checkout_field( $fields ) {
     ?>
     <p class="form-row form-group form-row-wide" style="margin-top:90px;">
         <label for="dokan_subscription_start_date">Subscription Start Date<span class="required">*</span></label>
-        <input 
-            type="text" 
-            class="input-text form-control" 
-            name="dokan_subscription_start_date" 
-            id="dokan_subscription_start_date" 
+        <input
+            type="text"
+            class="input-text form-control"
+            name="dokan_subscription_start_date"
+            id="dokan_subscription_start_date"
             required="required"
         />
     </p>
@@ -66,9 +66,9 @@ function dpe_subscription_checkout_field( $fields ) {
  */
 function dpe_save_subscription_start_date( $user_id, $dokan_settings ) {
 
-    update_user_meta( 
-        $user_id, 
-        'dokan_subscription_start_date', 
+    update_user_meta(
+        $user_id,
+        'dokan_subscription_start_date',
         date( 'Y-m-d H:i:s', strtotime( $_POST['dokan_subscription_start_date'] ) )
     );
 }
@@ -116,13 +116,13 @@ function dpe_validate_subscription_start_date( $error ) {
     $date = new DateTime( $_POST['dokan_subscription_start_date'] );
     $now  = new DateTime();
     $next = (new DateTime())->add( date_interval_create_from_date_string( '+1 years' ) );
-    
+
     if( !$date || !in_array( $date->format('Y'), array( $now->format('Y'), $next->format('Y') ) ) ) {
         return new WP_Error( 'subscription-start-date-error', 'Invalid subscription date' );
     }
 
     $restricted_days = dpe_get_restrcited_days_for_month( $date->format('Y'), $date->format('m') );
-    
+
     if( count( $restricted_days ) && in_array( $date->format('Y-m-d'), $restricted_days ) ) {
         return new WP_Error( 'subscription-start-date-error', 'Restricted subscription date' );
     }
@@ -150,7 +150,7 @@ add_filter( 'dokan_seller_registration_required_fields', 'dpe_remove_shopname_re
  */
 function dpe_set_shop_data( $user_id, $data ) {
 
-    wp_update_user( 
+    wp_update_user(
         array(
             'ID'            => $user_id,
             'user_nicename' => $user_id
@@ -194,12 +194,32 @@ function dpe_update_dokan_added_product( $product_id, $post_data ) {
     if( !empty( $shelves ) ) {
         update_post_meta( $product_id, '_sku', $product_id . ' - ' . implode( ' - ', $shelves ) );
     }
+
+    if( !empty( $post_data['product_cat'] ) && $post_data['product_cat'] != "-1" ) {
+
+        $parent = $post_data['product_cat'];
+        $cats   = [$parent];
+
+        while( $parent ) {
+
+            $key   = "product_cat_{$parent}";
+            $value = !empty( $post_data[$key] ) &&  "-1" != $post_data[$key] ? $post_data[$key] : '';
+            if( !empty( $value ) ){
+                $cats[] = $value;
+                $parent = $value;
+            }else{
+                break;
+            }
+
+        }
+        wp_set_post_terms( $product_id,  array_map( 'intval', $cats ), 'product_cat' );
+    }
 }
 add_action( 'dokan_new_product_added', 'dpe_update_dokan_added_product', 10, 2 );
 
 
 /**
- * Show `in someones cart` message 
+ * Show `in someones cart` message
  * if the items is in another users cart
  */
 function dpe_in_someones_cart_to_loop() {
@@ -217,7 +237,7 @@ function dpe_in_someones_cart_to_loop() {
     $carts   = $wpdb->get_var(
         "SELECT COUNT(*) from {$wpdb->usermeta} WHERE meta_key = '_woocommerce_persistent_cart_1' and user_id != {$user_id} and meta_value like '%{$query}%'"
     );
-    
+
 
     if( intval( $carts ) > 0 ) {
          $in_other_cart_translation = __('This product is in another cart','Dokan');
@@ -236,13 +256,13 @@ function dpe_show_subscription_start_date( $content ) {
     $subscription   = dokan()->vendor->get( get_current_user_id() )->subscription;
     if( $subscription ) {
         $translated_txt = __('Your package start date is','Dokan');
-        $starte_date_el = sprintf( 
-            '<p class="pack-start-date" style="display:none;">%s <span>%s</span></p>', 
+        $starte_date_el = sprintf(
+            '<p class="pack-start-date" style="display:none;">%s <span>%s</span></p>',
             $translated_txt,
-            date_i18n( 
-                get_option( 'date_format' ), 
-                strtotime( $subscription->get_pack_start_date() ) 
-            ) 
+            date_i18n(
+                get_option( 'date_format' ),
+                strtotime( $subscription->get_pack_start_date() )
+            )
         );
         $content .= $starte_date_el;
     }
@@ -278,7 +298,7 @@ function dpe_get_subscriptions_dates( $start, $end ) {
         "SELECT meta.user_id, meta.meta_value as startdate, meta_1.meta_value as enddate
         FROM {$wpdb->usermeta} meta
         JOIN {$wpdb->usermeta} meta_1 ON meta.user_id = meta_1.user_id and meta_1.meta_key = 'product_pack_enddate'
-        WHERE meta.meta_key = 'product_pack_startdate' and 
+        WHERE meta.meta_key = 'product_pack_startdate' and
         ( CAST(meta.meta_value AS DATE) between %s and %s or CAST(meta_1.meta_value AS DATE) between %s and %s)",
         array( $start, $end, $start, $end )
     );
@@ -339,7 +359,7 @@ function get_unused_shelves( $date = '' ) {
         $date = date( 'Y-m-d H:i:s' );
     }
 
-    $query    =  $wpdb->prepare( 
+    $query    =  $wpdb->prepare(
         "SELECT um1.meta_value from {$wpdb->usermeta} um
         JOIN {$wpdb->usermeta} um1 on um1.user_id = um.user_id and um1.meta_key = 'vendor_custom_product_id'
         WHERE um.meta_key = 'product_pack_enddate' and CAST(um.meta_value AS DATETIME) > %s and 1=1",
@@ -352,7 +372,7 @@ function get_unused_shelves( $date = '' ) {
     $occupied = count($occupied) ? call_user_func_array( 'array_merge', $occupied ) : [];
 
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
-    
+
     $terms = get_terms( array(
         'taxonomy'   => 'vendor_shelf',
         'hide_empty' => false,
@@ -374,7 +394,7 @@ function dpe_vendor_add_product_popup( $template, $slug, $name ) {
         $child_theme_file = get_stylesheet_directory() . "/dokan/{$slug}.php";
         if( !file_exists( $child_theme_file ) ) {
             $path = explode( '/', $slug );
-            $file  = $path[count($path) - 1]; 
+            $file  = $path[count($path) - 1];
             $template = plugin_dir_path( DPE_PLUGIN ) . "templates/{$file}.php";
         }
     }
@@ -444,8 +464,8 @@ function dpe_brand_tags_data_attribute( $output, $args ) {
         }
 
         $selected = isset( $post ) ? wp_get_post_terms( $post->ID, 'product_brand' ) : [];
-        $terms    = get_terms( array( 'taxonomy' => 'product_brand', 'hide_empty' => false ) ); 
-        ob_start(); 
+        $terms    = get_terms( array( 'taxonomy' => 'product_brand', 'hide_empty' => false ) );
+        ob_start();
         ?>
 
         <select name="product_brand[]" id="product_brand" class="product_brand dokan-form-control dokan-select2" data-tags="true" multiple="true">
@@ -470,13 +490,33 @@ add_filter( 'wp_dropdown_cats', 'dpe_brand_tags_data_attribute', 10, 2 );
  */
 function dpe_new_product_brand_added( $product_id, $data ) {
     if( !empty( $data['product_brand'] ) ) {
-        $brands = array_map( 
+        $brands = array_map(
             function( $term ) {
                 return intval($term) ? intval($term) : $term;
             },
             (array) $data['product_brand']
         );
         wp_set_object_terms( $product_id, $brands, 'product_brand', true );
+    }
+
+    if( !empty( $data['product_cat'] ) && $data['product_cat'] != "-1" ) {
+
+        $parent = $data['product_cat'];
+        $cats   = [$parent];
+
+        while( $parent ) {
+
+            $key   = "product_cat_{$parent}";
+            $value = !empty( $data[$key] ) &&  "-1" != $data[$key] ? $data[$key] : '';
+            if( !empty( $value ) ){
+                $cats[] = $value;
+                $parent = $value;
+            }else{
+                break;
+            }
+
+        }
+        wp_set_post_terms( $product_id,  array_map( 'intval', $cats ), 'product_cat' );
     }
 }
 add_action( 'dokan_new_product_added', 'dpe_new_product_brand_added', 21, 2 );
@@ -488,9 +528,9 @@ add_action( 'dokan_product_updated', 'dpe_new_product_brand_added', 21, 2 );
  */
 // function dpe_dashboard_vendor_id(){
 //     echo sprintf(
-//         '<div class="dashboard-widget"><div class="widget-title" style="border:none;margin-bottom:0;">%s %s : %d</div></div>', 
+//         '<div class="dashboard-widget"><div class="widget-title" style="border:none;margin-bottom:0;">%s %s : %d</div></div>',
 //         '<i class="fa fa-home"></i>',
-//         'Store ID', 
+//         'Store ID',
 //         get_current_user_id()
 //     );
 // }
@@ -507,7 +547,7 @@ function dpe_get_vendor_shelves( $vendor_id ) {
         return [];
     }
 
-    $terms = array_map( 
+    $terms = array_map(
         function( $id ) {
             $term = get_term( $id, 'vendor_shelf' );
             return $term && !is_wp_error( $term ) ?  $term->name : "";
@@ -541,7 +581,7 @@ function dpe_vendor_product_sku( $sku, $product ) {
 add_filter( 'woocommerce_product_get_sku', 'dpe_vendor_product_sku', 10, 2 );
 
 
-function dpe_vendor_product_sku_update(){    
+function dpe_vendor_product_sku_update(){
     global $pagenow;
 
     $is_admin_edit = is_admin() && $pagenow === 'post.php' && ( !empty( $_GET['action'] ) && $_GET['action'] == 'edit' ) && !empty( $_GET['post'] );
@@ -567,7 +607,7 @@ add_action( 'init', 'dpe_vendor_product_sku_update', 10 );
  */
 function dpe_vendor_bulk_sale_price( $statuses ) {
 
-    $statuses['sale'] = 'Sale Price'; 
+    $statuses['sale'] = 'Sale Price';
 
     return $statuses;
 }
@@ -578,7 +618,7 @@ add_filter( 'dokan_bulk_product_statuses', 'dpe_vendor_bulk_sale_price' );
  * Process vendor dashboard bulk sale price
  */
 function dpe_vendor_bulk_sale_price_process( $status, $products ){
-    
+
     $sale_percent = !empty( $_POST['sale_value'] ) ? floatval( $_POST['sale_value'] ) : 0;
 
     foreach( $products as $product ) {
@@ -592,7 +632,7 @@ function dpe_vendor_bulk_sale_price_process( $status, $products ){
         }else{
             $sale_price = "";
         }
-        
+
         update_post_meta( $product, '_sale_price',  $sale_price );
     }
 
@@ -640,7 +680,7 @@ function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
             foreach( $product->get_children_() as $variation ) {
 
                 if( $rate ){
-                    $sale_price = $variation->get_regular_price() - ( $variation->get_regular_price() * ( $rate / 100 ) ); 
+                    $sale_price = $variation->get_regular_price() - ( $variation->get_regular_price() * ( $rate / 100 ) );
                 }
                 $errors = $variation->set_props(
                     array(
@@ -649,7 +689,7 @@ function dpe_save_vendor_sales_data( $vendor_id, $settings ) {
                         'sale_price'        => $sale_price
                     )
                 );
-                
+
                 if( !is_wp_error( $errors ) ) {
                     $variation->save();
                 }
@@ -696,19 +736,19 @@ add_filter( 'dokan_seller_listing_args', 'dpe_vendor_list_args', 10, 2 );
 
 /**
  * Filtering vendors based on sale_price
- 
+
 function dpe_vendor_list_filter( $query ) {
 
     global $wpdb;
 
-    $exclude    = []; 
+    $exclude    = [];
 
     // query to exclude vendors who has no products
     $n_query = "SELECT users.ID FROM {$wpdb->users} users
         LEFT JOIN {$wpdb->posts} posts ON posts.post_author = users.ID and posts.post_type = 'product' and posts.post_status = 'publish'
         WHERE posts.ID IS NULL and 1=1
         GROUP BY users.ID";
-    
+
     $no_product         = $wpdb->get_results(
         $n_query,
         ARRAY_A
@@ -723,7 +763,7 @@ function dpe_vendor_list_filter( $query ) {
     if( $sale_price ) {
 
         // query to exclude vendors who has no active sales
-        $n_query = "SELECT users.ID FROM {$wpdb->users} users 
+        $n_query = "SELECT users.ID FROM {$wpdb->users} users
             JOIN {$wpdb->usermeta} usermeta ON usermeta.user_id = users.id
             LEFT JOIN {$wpdb->usermeta} usermeta1 ON usermeta1.user_id = users.id and usermeta1.meta_key = 'store_discount_start'
             LEFT JOIN {$wpdb->usermeta} usermeta2 ON usermeta2.user_id = users.id and usermeta2.meta_key = 'store_discount_end'
@@ -736,10 +776,10 @@ function dpe_vendor_list_filter( $query ) {
                 )
                 and
                 1=1";
-                
+
         $no_sale = $wpdb->get_results(
             $wpdb->prepare(
-                $n_query, 
+                $n_query,
                 [ '%seller%', '%administrator%', date('Y-m-d 00:00:00'), date('Y-m-d 23:59:59') ]
             ),
             ARRAY_A
@@ -828,7 +868,7 @@ function dpe_modify_subscription_default_message(){
             $subscription_pack     = DokanPro\Modules\Subscription\Helper::get_subscription_pack_id();
             $is_valid_subscription = DokanPro\Modules\Subscription\Helper::is_vendor_subscribed_pack( $subscription_pack );
             if( !$subscription_pack || !$is_valid_subscription ){
-                echo sprintf( 
+                echo sprintf(
                         '<p class="dokan-info">%s</p>',
                         __( 'Sorry! You need to update your subscription. You can not add or publish any product. Please update your package.', 'dokan' )
                 );
@@ -886,7 +926,7 @@ add_filter( 'woocommerce_locate_template', 'dpe_wc_templates', 99, 3 );
 /**
  * override vendor product listing template
  * and add woof ajax wrapper
- * 
+ *
  */
 function dpe_vendor_product_list_template(){
 
@@ -900,20 +940,20 @@ add_filter( 'dokan_elementor_store_tab_content_template', 'dpe_vendor_product_li
 /**
  * set vendor id to woof filter query
  * so it would load only current vendor product
- * 
+ *
  */
 function dpe_vendor_filter_query( $query ){
     global $WOOF;
 
     if( !empty( $_REQUEST['shortcode'] ) ) {
-        
+
         $shortcode     = $_REQUEST['shortcode'];
         $vendor_string = strpos( $shortcode, 'vendor_id' );
 
         if( false !== $vendor_string ){
             $vendor = substr( $shortcode, $vendor_string );
             $texts  = explode( '=', $vendor );
-            
+
             if( !empty( $texts[1] ) && $id = intval( $texts[1] ) ) {
                 $query['author'] = $id;
             }
@@ -928,11 +968,11 @@ add_filter( 'woof_products_query', 'dpe_vendor_filter_query' );
 /**
  * with woof filters vendors page visible as archive
  * we check and redirect them
- * 
+ *
  */
 function dpe_redirect_vendors_with_filter(){
     global $wp_query;
-    
+
     if( dokan_is_store_page() && is_archive() ) {
         $author_id = get_query_var( 'author' );
         wp_safe_redirect( dokan()->vendor->get( $author_id )->get_shop_url() );
@@ -940,3 +980,41 @@ function dpe_redirect_vendors_with_filter(){
     }
 }
 add_action( 'template_redirect', 'dpe_redirect_vendors_with_filter' );
+
+
+
+function dpe_vendor_acf_new_product_form( $value, $post_id, $field ) {
+
+    global $wp;
+
+    if( !isset( $wp->query_vars['new-product'] ) || !dokan()->dashboard->templates->products->has_errors()  ) {
+        return $value;
+    }
+
+    $post      = get_post( $field['parent'] );
+    $post_name = $post && $post->post_name ? $post->post_name : '';
+
+    if( $post_name === 'group_5f1923aea3075' && empty( $value ) ) {
+
+        $post_value = !empty( $_REQUEST['acf'] ) && !empty( $_REQUEST['acf'][$field['key']] ) ? $_REQUEST['acf'][$field['key']] : '';
+        $value      = !empty( $post_value ) ? $post_value : $value;
+    }
+
+    return $value;
+}
+add_filter('acf/load_value', 'dpe_vendor_acf_new_product_form', 10, 3);
+
+
+
+function dpe_vendor_acf_new_product_form_field( $field ){
+
+    global $wp;
+
+    if( isset( $wp->query_vars['new-product'] ) ) {
+        $field['class']            = 'dokan-form-control';
+        $field['wrapper']['class'] = 'dokan-form-group';
+    }
+
+    return $field;
+}
+add_filter('acf/load_field', 'dpe_vendor_acf_new_product_form_field');

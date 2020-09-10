@@ -146,7 +146,7 @@ do_action( 'dokan_dashboard_wrap_before', $post, $post_id );
 <?php if ( !empty( $_GET['new'] ) ) { ?>
                     <div class="dokan-message">
                         <button type="button" class="dokan-close" data-dismiss="alert">&times;</button>
-                        <strong><?php 
+                        <strong><?php
         $new_product_added_translation = __('Your new product added successfully. Product ID is: %d','Dokan');
 echo sprintf( $new_product_added_translation, $post_id ) ?>
 </strong>
@@ -156,7 +156,7 @@ echo sprintf( $new_product_added_translation, $post_id ) ?>
                         <?php } ?>
                     </div>
                 <?php } ?>
-                
+
                 <?php
                 $can_sell = apply_filters( 'dokan_can_post', true );
 
@@ -262,8 +262,8 @@ echo sprintf( $new_product_added_translation, $post_id ) ?>
                                     </div>
 
                                     <?php do_action( 'dokan_product_edit_after_pricing', $post, $post_id ); ?>
-                                    
-                                    
+
+
 <?php
 
 acf_form(array(
@@ -273,18 +273,18 @@ acf_form(array(
     'form' => false
 ));
 
-?>                           
-                                    
-                                    
-                                    
-                                    
+?>
+
+
+
+
 
                                     <?php if ( dokan_get_option( 'product_category_style', 'dokan_selling', 'single' ) == 'single' ): ?>
                                        <?php
                                        $product_cat = -1;
                                        $parent_cats = array();
                                        $term = array();
-                                       $term = wp_get_post_terms( $post_id, 'product_cat', array( 'fields' => 'ids') );
+                                       $term = wp_get_post_terms( $post_id, 'product_cat', array( 'fields' => 'ids', 'orderby' => 'parent', 'order' => 'DESC') );
 
                                        if ( $term ) {
                                            $product_cat = reset( $term );
@@ -295,7 +295,7 @@ acf_form(array(
                                        if( count( $parent_cats ) ) {
 
                                            $parent_cats = array_reverse( $parent_cats );
-                                           
+
                                            foreach( $parent_cats as $index => $parent_cat ) {
 
                                                $parent = $index == 0 ? 0 : $parent_cats[$index - 1];
@@ -381,7 +381,7 @@ acf_form(array(
                                         </div>
                                     <?php endif; ?>
 
-                                    
+
 
                                     <?php do_action( 'dokan_product_edit_after_product_tags', $post, $post_id ); ?>
                                 </div><!-- .content-half-part -->
