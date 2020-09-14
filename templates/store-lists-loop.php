@@ -138,7 +138,9 @@
                                     <?php echo get_avatar( $seller->ID, 150 ); ?>
                                 </div> -->
                                 <a href="<?php echo esc_url( $store_url ); ?>" title="<?php esc_attr_e( 'Visit Store', 'dokan-lite' );?>" class="btn-products">
-                                    See all products
+
+                                    <?php _e( 'See all products', 'Dokan' ); ?>
+
                                 </a>
                                 <!-- Commented to show products -->
                                 <?php //do_action( 'dokan_seller_listing_footer_content', $seller, $store_info ); ?>

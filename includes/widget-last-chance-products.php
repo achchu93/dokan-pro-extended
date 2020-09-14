@@ -83,7 +83,7 @@ class DPE_Last_Chance_Product_Widget extends WC_Widget {
 						'key' 	  => 'product_pack_enddate',
 						'compare' => 'BETWEEN',
 						'type' 	  => 'DATE',
-						'value'   => [ date('Y-m-d 00:00:00'), date( 'Y-m-d H:i:s', strtotime( "+3 days" ) ) ]
+						'value'   => [ date('Y-m-d 00:00:00'), date( 'Y-m-d H:i:s', strtotime( "+5 days" ) ) ]
 					)
 				),
 			)

@@ -16,6 +16,8 @@ function dpe_vendor_custom_product_id( $user ) {
         WHERE um.meta_key = 'product_pack_enddate' and CAST(um.meta_value AS DATETIME) > %s and um.user_id != $user->ID and 1=1",
         array( date('Y-m-d H:i:s') )
     );
+
+    //um.user_id not in (select user_id from {$wpdb->usermeta} where meta_key = 'vendor_custom_product_id' and meta_value = (select meta_value from {$wpdb->usermeta} where meta_key = 'vendor_custom_product_id' and user_id = $user->ID)) 
     $occupied = $wpdb->get_col( $query );
     $occupied = array_map( function( $value ){
         return (array) $value;
@@ -23,6 +25,8 @@ function dpe_vendor_custom_product_id( $user ) {
     $occupied = count( $occupied ) ? call_user_func_array( 'array_merge', $occupied ) : [];
 
     $exclude  = is_array( $occupied ) ? array_map( 'intval', $occupied ) : array();
+
+    $exclude = array(); //showing all on admin side
     
     $terms = get_terms( array(
         'taxonomy'   => 'vendor_shelf',

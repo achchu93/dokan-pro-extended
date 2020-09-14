@@ -134,10 +134,11 @@ function dpe_dokan_dashboard_js() {
                     var conflict_first_date_human = new Date(conflict_first_date[0]); conflict_first_date_human = conflict_first_date_human.toLocaleDateString();
 
 
-                    alert('Selected subscription period  from '+this_date_human+' to '+next_date_human+' includes '+conflict_first_date_human+', which is not available. Please choose a different subscription start date.');
+//                    alert('Selected subscription period  from '+this_date_human+' to '+next_date_human+' includes '+conflict_first_date_human+', which is not available. Please choose a different subscription start date.');
                 //    $('#datepicker').datepicker('setDate', null);  //this returns user to initial month
 
-                    $('#submit-picker').attr('disabled', true);
+//                    $('#submit-picker').attr('disabled', true);
+                $('#submit-picker').removeAttr('disabled'); //disbaling the JS check commented above 2 lines, added this line
 
 
 
@@ -179,8 +180,8 @@ function dpe_dokan_dashboard_js() {
 
                 restrictDays(
                     $.datepicker.formatDate('yy', picker.datepicker('getDate')),
-                    $.datepicker.formatDate('mm', picker.datepicker('getDate')),
-                    pack_id
+                    $.datepicker.formatDate('mm', picker.datepicker('getDate'))
+                    //,pack_id //commenting it out to disable functionality from PHP end.
                 );
             }else{
                 window.location.href = $(this).attr('href');
@@ -256,9 +257,9 @@ function dpe_dokan_dashboard_js() {
             var el = $(this);
 
             $(this).datepicker({
-				defaultDate:     '',
-				dateFormat:      'yy-mm-dd',
-				numberOfMonths:  1,
+                defaultDate:     '',
+                dateFormat:      'yy-mm-dd',
+                numberOfMonths:  1,
                 onSelect: function( date, instance ){
                     el.val(date);
                 }
@@ -278,7 +279,7 @@ function dpe_dokan_dashboard_js() {
             restrictedDays = {}; // resetting for now to avoid confusion, can use it later to optimize performance
 
             var blockDiv  = $('.ui-datepicker-inline');
-            var formatted = String(month).padStart(2, "0");
+             formatted = String(month).padStart(2, "0");
 
             if( restrictedDays[formatted] ){
                 return;
@@ -300,6 +301,35 @@ function dpe_dokan_dashboard_js() {
             }).then(function(response){
                 restrictedDays[formatted] = response.data;
                 console.log(response.data); //added
+                //
+                console.log('more fun');
+                var cancelled_dates = response.data;
+
+                cancelled_dates.forEach(function addExtraDates(item,index){
+
+                    var weeks = jQuery("div.jet-tabs div.active-tab").attr('data-tab');
+                    var days = weeks * 7;
+                    days  = days-1;
+
+                    this_date = new Date(item);
+                    this_date = this_date.setDate(this_date.getDate() - 1);
+
+                    prev_date = new Date(item);
+                    prev_date = prev_date.setDate(prev_date.getDate() - days);
+
+                    var getDaysArray = function(s,e) {for(var a=[],d=new Date(s);d<=e;d.setDate(d.getDate()+1)){ a.push(new Date(d));}return a;};
+
+                    all_days = getDaysArray( prev_date, this_date);
+                    all_days = all_days.map((v)=>v.toISOString().slice(0,10));
+
+                    console.log('all_days', all_days);
+                    restrictedDays[formatted] = restrictedDays[formatted].concat(all_days);
+
+                }); 
+
+                console.log('restrictedDaysb',restrictedDays);
+
+
             }).always(function(){
                 blockDiv.unblock();
                 picker.datepicker('refresh');
@@ -391,7 +421,7 @@ add_action( 'wp_enqueue_scripts', 'dpe_registration_scripts', 99 );
 function dpe_vendor_dashboard_picker() {
     ?>
     <div id="datepicker_container" style="display:none; cursor: default">
-        <p>Please choose a subscription start date. Default will be current date.</p>
+        <p><?php _e( 'Please choose a subscription start date. Default will be current date.', 'Dokan' ); ?> </p>
         <div id="datepicker"></div>
         <div class="actions">
             <button id="cancel-picker" class="button">Cancel</button>
@@ -409,8 +439,8 @@ function dpe_vendor_dashboard_sale_input() {
         <p>Please input a sale percentage to be applied for products.</p>
         <input type="number" id="sale_input">
         <div class="actions">
-            <button id="cancel-sale" class="button">Cancel</button>
-            <button id="submit-sale" class="button" disabled>Submit</button>
+            <button id="cancel-sale" class="button">Hætta við</button>
+            <button id="submit-sale" class="button" disabled>Sendu inn</button>
         </div>
     </div>
     <?php

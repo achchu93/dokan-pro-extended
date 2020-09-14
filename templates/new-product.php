@@ -88,7 +88,12 @@ use WeDevs\Dokan\Walkers\TaxonomyDropdown;
                 <?php if ( !empty( $_GET['new'] ) ) { ?>
                     <div class="dokan-message">
                         <button type="button" class="dokan-close" data-dismiss="alert">&times;</button>
-                        <strong><?php echo sprintf( 'Your new product added successfully. Product ID is: %d', max( ( isset( $post_id ) ? $post_id : 0 ), (int)$_GET['new'] ) ) ?></strong>
+                        <strong>
+                            <?php 
+                        $new_product_added_translation_add_page = __('Your new product added successfully. Product ID is: %d','Dokan');
+                            echo sprintf( $new_product_added_translation_add_page, max( ( isset( $post_id ) ? $post_id : 0 ), (int)$_GET['new'] ) ) ?>
+                                
+                            </strong>
                         <?php if ( isset( $post ) && $post->post_status == 'publish' ) { ?>
                             <a href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" target="_blank"><?php esc_html_e( 'View Product &rarr;', 'dokan-lite' ); ?></a>
                         <?php } ?>

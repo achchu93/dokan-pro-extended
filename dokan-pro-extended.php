@@ -97,6 +97,17 @@ function dpe_extende_subscription_start_date( $vendor_id ) {
     update_user_meta( $vendor_id, 'product_pack_startdate', date( 'Y-m-d H:i:s', strtotime( $date_meta ) ) );
     update_user_meta( $vendor_id, 'product_pack_enddate', date( 'Y-m-d H:i:s', strtotime( "+$validitiy days", strtotime( $date_meta ) ) ) );
 
+
+    //added on request ... assgin shelf on buying subscription
+    $user_id = $vendor_id;
+    $date  = date( 'Y-m-d H:i:s', strtotime( get_user_meta( $user_id, 'product_pack_enddate', true ) ) );
+    $terms = get_unused_shelves( $date );
+
+    if( is_array( $terms ) && count( $terms ) ) {
+        $term = current( $terms );
+        update_user_meta( $user_id, 'vendor_custom_product_id', $term->term_id );
+    }
+
 }
 add_action( 'dokan_vendor_purchased_subscription', 'dpe_extende_subscription_start_date' );
 
@@ -340,7 +351,7 @@ add_action( 'init', 'dpe_vendor_shelf_taxonomy' );
 /**
  * Assign available vendor shelf for vendor
  */
-function dpe_update_vendor_shelf ( $user_id, $settings ) {
+function dpe_update_vendor_shelf ( $user_id ) { //settings parameters removed : , $settings
     $date  = date( 'Y-m-d H:i:s', strtotime( get_user_meta( $user_id, 'product_pack_enddate', true ) ) );
     $terms = get_unused_shelves( $date );
 
@@ -349,7 +360,10 @@ function dpe_update_vendor_shelf ( $user_id, $settings ) {
         update_user_meta( $user_id, 'vendor_custom_product_id', $term->term_id );
     }
 }
-add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
+// now we assign shelf when seller buys a subscription : i.e inside > dokan_vendor_purchased_subscription
+// add_action( 'dokan_new_seller_created', 'dpe_update_vendor_shelf', 10, 2 );
+//add_action( 'dokan_vendor_purchased_subscription', 'dpe_update_vendor_shelf', 200, 1 );
+
 
 
 function get_unused_shelves( $date = '' ) {
