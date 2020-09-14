@@ -100,57 +100,13 @@ function dpe_dokan_dashboard_js() {
             defaultDate: new Date(),
             dateFormat: 'yy-mm-dd',
             onSelect: function(date, instance){
-                $('.ui-datepicker-inline').block({message:null}); //added
-
-                console.log('date',date);
-                console.log('restricted',restrictedDays); //added
-
-                //added later
-
-                var weeks = jQuery("div.jet-tabs div.active-tab").attr('data-tab');
-                var days = weeks * 7;
-                days  = days-1;
-
-                this_date = new Date(date);
-                next_date = new Date(date);
-                next_date = next_date.setDate(next_date.getDate() + days);
-
-                var getDaysArray = function(s,e) {for(var a=[],d=new Date(s);d<=e;d.setDate(d.getDate()+1)){ a.push(new Date(d));}return a;};
-
-                all_days = getDaysArray(this_date, next_date);
-                all_days = all_days.map((v)=>v.toISOString().slice(0,10));
-
-                console.log('all_days',all_days); //added
-
-
-                restrictedDaysOnly = restrictedDays[Object.keys(restrictedDays)[0]];
-
-                if( all_days.some(r=> restrictedDaysOnly.indexOf(r) >= 0) ){ //true if any of all_days date is in restrictedDays array
-
-                    var conflict_first_date = all_days.filter(function(item){ return restrictedDaysOnly.indexOf(item) > -1});
-
-                    var this_date_human = this_date.toLocaleDateString();
-                    var next_date_human = new Date(next_date); next_date_human = next_date_human.toLocaleDateString();
-                    var conflict_first_date_human = new Date(conflict_first_date[0]); conflict_first_date_human = conflict_first_date_human.toLocaleDateString();
-
-
-//                    alert('Selected subscription period  from '+this_date_human+' to '+next_date_human+' includes '+conflict_first_date_human+', which is not available. Please choose a different subscription start date.');
-                //    $('#datepicker').datepicker('setDate', null);  //this returns user to initial month
-
-//                    $('#submit-picker').attr('disabled', true);
-                $('#submit-picker').removeAttr('disabled'); //disbaling the JS check commented above 2 lines, added this line
-
-
-
-                }else{
-                    $('#submit-picker').removeAttr('disabled');
-                }
-
-
-                $('.ui-datepicker-inline').unblock(); //added
+                $('#submit-picker').removeAttr('disabled');
             },
             onChangeMonthYear: function(year, month, instance){
-                restrictDays(year, month);
+                var url = new URL(chosenPack.get(0).href);
+                var pack_id = url.searchParams.get('add-to-cart');
+
+                restrictDays(year, month, pack_id);
             },
             beforeShowDay: function (date) {
                 var string = $.datepicker.formatDate('yy-mm-dd', date);
@@ -180,8 +136,8 @@ function dpe_dokan_dashboard_js() {
 
                 restrictDays(
                     $.datepicker.formatDate('yy', picker.datepicker('getDate')),
-                    $.datepicker.formatDate('mm', picker.datepicker('getDate'))
-                    //,pack_id //commenting it out to disable functionality from PHP end.
+                    $.datepicker.formatDate('mm', picker.datepicker('getDate')),
+                    pack_id
                 );
             }else{
                 window.location.href = $(this).attr('href');
@@ -300,36 +256,6 @@ function dpe_dokan_dashboard_js() {
                 }
             }).then(function(response){
                 restrictedDays[formatted] = response.data;
-                console.log(response.data); //added
-                //
-                console.log('more fun');
-                var cancelled_dates = response.data;
-
-                cancelled_dates.forEach(function addExtraDates(item,index){
-
-                    var weeks = jQuery("div.jet-tabs div.active-tab").attr('data-tab');
-                    var days = weeks * 7;
-                    days  = days-1;
-
-                    this_date = new Date(item);
-                    this_date = this_date.setDate(this_date.getDate() - 1);
-
-                    prev_date = new Date(item);
-                    prev_date = prev_date.setDate(prev_date.getDate() - days);
-
-                    var getDaysArray = function(s,e) {for(var a=[],d=new Date(s);d<=e;d.setDate(d.getDate()+1)){ a.push(new Date(d));}return a;};
-
-                    all_days = getDaysArray( prev_date, this_date);
-                    all_days = all_days.map((v)=>v.toISOString().slice(0,10));
-
-                    console.log('all_days', all_days);
-                    restrictedDays[formatted] = restrictedDays[formatted].concat(all_days);
-
-                }); 
-
-                console.log('restrictedDaysb',restrictedDays);
-
-
             }).always(function(){
                 blockDiv.unblock();
                 picker.datepicker('refresh');

@@ -432,56 +432,91 @@ add_filter( 'dokan_locate_template', 'dpe_vendor_add_product_popup', 10, 3 );
  */
 function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
 
-    $start = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
-    $end   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 31 ) );
-    $pack  = !is_null( $pack_id ) ? new DokanPro\Modules\Subscription\SubscriptionPack($pack_id) : false;
+    $start   = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
+    $end     = ( new DateTime() )->setDate( intval( $year ), intval( $month ), intval( date( 't', strtotime( "{$year}-{$month}" ) ) ) );
+    $pack    = !is_null( $pack_id ) ? new DokanPro\Modules\Subscription\SubscriptionPack($pack_id) : false;
+    $max_end = $pack ? date( 'Y-m-d', strtotime( "+{$pack->get_pack_valid_days()} days", strtotime( $end->format('Y-m-d') ) ) ) : $end->format('Y-m-d');
 
-    $option_key    = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
-    $days          = get_option( $option_key, array() );
+    $option_key      = "sub_restricted_days_{$start->format('Y')}{$start->format('m')}";
+    $restricted_days = get_option( $option_key, array() );
+
+    if( $max_end !== $end->format('Y-m-d') ){
+        $max      = new DateTime( $max_end );
+        $temp_end = clone $end;
+        while( $max->format('m') !==  $temp_end->format('m') ){
+            $temp_end->add( date_interval_create_from_date_string( '1 month' ) );
+
+            $option_key      = "sub_restricted_days_{$temp_end->format('Y')}{$temp_end->format('m')}";
+            $restricted_days = $restricted_days + (array)get_option( $option_key, array() );
+        }
+    }
 
     $results = array();
-    $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $end->format('Y-m-d') );
-    $l_date  = $start->format('Y-m-d');
+    $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $max_end );
+    $l_date  = $end->format('Y-m-d');
     $s_count = array();
     $left    = array();
 
-    while( $l_date <= $end->format('Y-m-d') ) {
 
-        $key          = strtotime( $l_date );
-        $shelves_left = get_unused_shelves( $l_date );
+    //error_log(json_encode( $restricted_days ));
 
-        if( count( $shelves_left ) ) {
-            foreach( $dates as $date ) {
-                $r_start = date( 'Y-m-d', strtotime( $date['startdate'] ) );
-                $r_end   = date( 'Y-m-d', strtotime( $date['enddate'] ) );
+    // while( $l_date >= $start->format('Y-m-d') ) {
 
-                if( $l_date >= $r_start && $l_date <= $r_end  ) {
-                    $s_count[$key] = array_key_exists( $key, $s_count ) ? $s_count[$key] + 1 : 1;
-                }
-            }
-        }
+    //     $key          = strtotime( $l_date );
+    //     $shelves_left = get_unused_shelves( $l_date );
 
-        if( !count( $shelves_left ) || isset( $days[$key], $s_count[$key] ) && intval( $days[$key] ) <= $s_count[$key] ) {
-            $results[] = date( 'Y-m-d', intval( $key ) );
-        }else{
-            $left[]    = date( 'Y-m-d', intval( $key ) );
-        }
+    //     $found = !count( $shelves_left ) ? [] : array_filter( $dates, function( $sub_date )use( $l_date ){
+    //         return $l_date >= date( 'Y-m-d', strtotime( $sub_date['startdate'] ) ) && $l_date <= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) );
+    //     });
 
-        $l_date  = date( 'Y-m-d', strtotime( '+1 day', strtotime( $l_date ) ) );
-    }
+    //     if( count( $found ) ){
+    //         $s_count[$key] = $found;
+    //     }
 
-    if( $pack ) {
 
-        $l_results = array();
-        foreach( $left as $l_date ) {
-            $pack_end = date( 'Y-m-d', strtotime( "+{$pack->get_pack_valid_days()} day", strtotime( $l_date ) ) );
-            if( in_array( $pack_end, $results ) || end( $results ) < $pack_end ) {
-                $l_results[] = $l_date;
-            }
-        }
+    // }
 
-        $results = array_merge( $l_results, $results );
-    }
+
+    // while( $l_date <= $end->format('Y-m-d') ) {
+
+    //     $key          = strtotime( $l_date );
+    //     $shelves_left = get_unused_shelves( $l_date );
+
+    //     if( count( $shelves_left ) ) {
+    //         foreach( $dates as $date ) {
+    //             $r_start = date( 'Y-m-d', strtotime( $date['startdate'] ) );
+    //             $r_end   = date( 'Y-m-d', strtotime( $date['enddate'] ) );
+
+    //             if( $l_date >= $r_start && $l_date <= $r_end  ) {
+    //                 $s_count[$key] = array_key_exists( $key, $s_count ) ? $s_count[$key] + 1 : 1;
+    //             }
+    //         }
+    //     }
+
+    //     if( !count( $shelves_left ) || isset( $restricted_days[$key], $s_count[$key] ) && intval( $restricted_days[$key] ) <= $s_count[$key] ) {
+    //         $results[] = date( 'Y-m-d', intval( $key ) );
+    //     }else{
+    //         $left[]    = date( 'Y-m-d', intval( $key ) );
+    //     }
+
+    //     $l_date  = date( 'Y-m-d', strtotime( '+1 day', strtotime( $l_date ) ) );
+    // }
+
+    // if( $pack ) {
+
+    //     $l_results = array();
+    //     foreach( $left as $l_date ) {
+    //         $pack_end = date( 'Y-m-d', strtotime( "+{$pack->get_pack_valid_days()} day", strtotime( $l_date ) ) );
+    //         if( in_array( $pack_end, $results ) || end( $results ) < $pack_end ) {
+
+    //             $dates
+
+    //             $l_results[] = $l_date;
+    //         }
+    //     }
+
+    //     $results = array_merge( $l_results, $results );
+    // }
 
     return $results;
 }
