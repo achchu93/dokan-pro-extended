@@ -442,7 +442,7 @@ function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
 
     if( $max_end !== $end->format('Y-m-d') ){
         $max      = new DateTime( $max_end );
-        $temp_end = clone $end;
+        $temp_end = ( clone $end )->setDate( intval( $year ), intval( $month ), intval( 01 ) );
         while( $max->format('m') !==  $temp_end->format('m') ){
             $temp_end->add( date_interval_create_from_date_string( '1 month' ) );
 
@@ -453,30 +453,77 @@ function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
 
     $results = array();
     $dates   = dpe_get_subscriptions_dates( $start->format('Y-m-d'),  $max_end );
-    $l_date  = $end->format('Y-m-d');
+    $l_date  = $max_end;
     $s_count = array();
     $left    = array();
 
+    // Going backwards in the loop to have all days
+    while( $l_date >= $start->format('Y-m-d') ) {
 
-    //error_log(json_encode( $restricted_days ));
+        $key          = strtotime( $l_date );
+        $shelves_left = get_unused_shelves( $l_date );
 
-    // while( $l_date >= $start->format('Y-m-d') ) {
+        $found = !count( $shelves_left ) ? [] : array_filter( $dates, function( $sub_date )use( $l_date ){
+            return $l_date >= date( 'Y-m-d', strtotime( $sub_date['startdate'] ) ) && $l_date <= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) );
+        });
 
-    //     $key          = strtotime( $l_date );
-    //     $shelves_left = get_unused_shelves( $l_date );
+        if( count( $found ) ){
+            $s_count[$key] = count( $found );
+        }
 
-    //     $found = !count( $shelves_left ) ? [] : array_filter( $dates, function( $sub_date )use( $l_date ){
-    //         return $l_date >= date( 'Y-m-d', strtotime( $sub_date['startdate'] ) ) && $l_date <= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) );
-    //     });
+        // Check shelves left or current loop day's restricition to add to results
+        if( !count( $shelves_left ) || isset( $restricted_days[$key], $s_count[$key] ) && intval( $restricted_days[$key] ) <= $s_count[$key] ){
+            $results[] = date( 'Y-m-d', intval( $key ) );
+        }
 
-    //     if( count( $found ) ){
-    //         $s_count[$key] = $found;
-    //     }
+        // If current loop date is not in the result we will check with pack end date
+        if( $pack && !in_array( $l_date, $results ) ){
+            $pack_end                  = date( 'Y-m-d', strtotime( "+{$pack->get_pack_valid_days()} day", strtotime( $l_date ) ) );
+            $pack_end_key              = strtotime( $pack_end );
+            $pack_end_day_shelves_left = get_unused_shelves( $pack_end );
+
+            // find count of all the days where subscription date start and end between pack start and pack end
+            $pack_found = !count( $pack_end_day_shelves_left ) ? [] : array_filter( $dates, function( $sub_date )use( $l_date, $pack_end ){
+                return ( $l_date <= date( 'Y-m-d', strtotime( $sub_date['startdate'] ) ) && $pack_end >= date( 'Y-m-d', strtotime( $sub_date['startdate'] ) ) )
+                || ( $l_date <= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) ) && $pack_end >= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) ) );
+            });
+
+            // Check restricted days available between start and end date
+            $restricted_days_between = array_filter( $restricted_days, function( $count, $r_day )use( $l_date, $pack_end, $s_count ){
+                $formatted_day = date( 'Y-m-d', intval( $r_day ) );
+                return $l_date <= $formatted_day && $pack_end >= $formatted_day && ( isset( $s_count[$r_day] ) && intval( $count ) <= $s_count[$r_day] );
+            }, ARRAY_FILTER_USE_BOTH );
+
+            // set count of pack end date when between dates are met
+            if( count( $pack_found ) ){
+                $s_count[$pack_end_key] = count( $pack_found );
+            }
+
+            /**
+             * 1st condition checks shelves left for pack end date
+             * 2nd condition checks pack end date is fully restricted
+             * 3rd condition checks pack end restricted count and registered count
+             * 4th condition checks if there is restricted days between pack start and end date
+             *
+             */
+            if(
+                !count( $pack_end_day_shelves_left ) ||
+                isset( $restricted_days[$pack_end_key] ) && intval( $restricted_days[$pack_end_key] ) < 1 ||
+                isset( $restricted_days[$pack_end_key], $s_count[$pack_end_key] ) && intval( $restricted_days[$pack_end_key] ) <= $s_count[$pack_end_key] ||
+                count( $restricted_days_between )
+            ){
+                $results[] = date( 'Y-m-d', intval( $key ) ); // Checks with pack end date but adding current loop date
+            }
+        }
+
+        $l_date  = date( 'Y-m-d', strtotime( '-1 day', strtotime( $l_date ) ) );
+    }
 
 
-    // }
-
-
+    /**
+     * Do not delete. Need for reference
+     *
+     */
     // while( $l_date <= $end->format('Y-m-d') ) {
 
     //     $key          = strtotime( $l_date );
