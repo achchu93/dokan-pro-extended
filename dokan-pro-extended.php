@@ -381,8 +381,8 @@ function get_unused_shelves( $date = '' ) {
         "SELECT um1.meta_value from {$wpdb->usermeta} um
         JOIN {$wpdb->usermeta} um1 on um1.user_id = um.user_id and um1.meta_key = 'vendor_custom_product_id'
         JOIN {$wpdb->usermeta} um2 on um2.user_id = um.user_id and um2.meta_key = 'product_pack_enddate'
-        WHERE ( ( um.meta_key = 'product_pack_startdate' and CAST(um.meta_value AS DATETIME) < %s )
-        and ( CAST(um2.meta_value AS DATETIME) > %s ) ) and 1=1 GROUP BY um1.meta_value",
+        WHERE ( ( um.meta_key = 'product_pack_startdate' and CAST(um.meta_value AS DATETIME) <= %s )
+        and ( CAST(um2.meta_value AS DATETIME) >= %s ) ) and 1=1 GROUP BY um1.meta_value",
         array( $date, $date )
     );
     $occupied = $wpdb->get_col( $query );
