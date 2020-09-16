@@ -310,8 +310,12 @@ function dpe_get_subscriptions_dates( $start, $end ) {
         FROM {$wpdb->usermeta} meta
         JOIN {$wpdb->usermeta} meta_1 ON meta.user_id = meta_1.user_id and meta_1.meta_key = 'product_pack_enddate'
         WHERE meta.meta_key = 'product_pack_startdate' and
-        ( CAST(meta.meta_value AS DATE) between %s and %s or CAST(meta_1.meta_value AS DATE) between %s and %s)",
-        array( $start, $end, $start, $end )
+        ( CAST(meta.meta_value AS DATE) between %s and %s
+        or
+        CAST(meta_1.meta_value AS DATE) between %s and %s
+        or
+        CAST(meta.meta_value AS DATE) < %s and CAST(meta_1.meta_value AS DATE) > %s )",
+        array( $start, $end, $start, $end, $start, $end )
     );
     return $wpdb->get_results( $query, ARRAY_A );
 }
@@ -488,16 +492,16 @@ function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
                 || ( $l_date <= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) ) && $pack_end >= date( 'Y-m-d', strtotime( $sub_date['enddate'] ) ) );
             });
 
+            // set count of pack end date when between dates are met
+            if( count( $pack_found ) ){
+                $s_count[$pack_end_key] = count( $pack_found );
+            }
+
             // Check restricted days available between start and end date
             $restricted_days_between = array_filter( $restricted_days, function( $count, $r_day )use( $l_date, $pack_end, $s_count ){
                 $formatted_day = date( 'Y-m-d', intval( $r_day ) );
                 return $l_date <= $formatted_day && $pack_end >= $formatted_day && ( isset( $s_count[$r_day] ) && intval( $count ) <= $s_count[$r_day] );
             }, ARRAY_FILTER_USE_BOTH );
-
-            // set count of pack end date when between dates are met
-            if( count( $pack_found ) ){
-                $s_count[$pack_end_key] = count( $pack_found );
-            }
 
             /**
              * 1st condition checks shelves left for pack end date

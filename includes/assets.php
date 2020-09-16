@@ -103,6 +103,10 @@ function dpe_dokan_dashboard_js() {
                 $('#submit-picker').removeAttr('disabled');
             },
             onChangeMonthYear: function(year, month, instance){
+                if( !chosenPack || !chosenPack.length ){
+                    return;
+                }
+
                 var url = new URL(chosenPack.get(0).href);
                 var pack_id = url.searchParams.get('add-to-cart');
 
