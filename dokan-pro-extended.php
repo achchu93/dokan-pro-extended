@@ -500,7 +500,7 @@ function dpe_get_restrcited_days_for_month( $year, $month, $pack_id = null ) {
             // Check restricted days available between start and end date
             $restricted_days_between = array_filter( $restricted_days, function( $count, $r_day )use( $l_date, $pack_end, $s_count ){
                 $formatted_day = date( 'Y-m-d', intval( $r_day ) );
-                return $l_date <= $formatted_day && $pack_end >= $formatted_day && ( isset( $s_count[$r_day] ) && intval( $count ) <= $s_count[$r_day] );
+                return $l_date <= $formatted_day && $pack_end >= $formatted_day && ( ( isset( $s_count[$r_day] ) && intval( $count ) <= $s_count[$r_day] ) || intval( $count ) < 1 );
             }, ARRAY_FILTER_USE_BOTH );
 
             /**
