@@ -100,7 +100,7 @@ function dpe_extende_subscription_start_date( $vendor_id ) {
 
     //added on request ... assgin shelf on buying subscription
     $user_id = $vendor_id;
-    $date  = date( 'Y-m-d H:i:s', strtotime( get_user_meta( $user_id, 'product_pack_enddate', true ) ) );
+    $date  = date( 'Y-m-d H:i:s', strtotime( $date_meta ) );
     $terms = get_unused_shelves( $date );
 
     if( is_array( $terms ) && count( $terms ) ) {
